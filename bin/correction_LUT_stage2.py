@@ -773,7 +773,7 @@ def print_Stage2_func_file(fits, output_filename):
                     curve_params = [curve_fn.GetParameter(i) for i in range(curve_fn.GetNpar())]
                 else:
                     curve_params = [1, 0, 1, 0, 1, 1]  # no correction
-                line_cols = [linear_const, linear_limit] + curve_params
+                line_cols = curve_params + [linear_const, linear_limit]
             else:
                 if "constant" in fit.GetName():
                     line_cols = [fit.GetParameter(i) for i in range(fit.GetNpar())]
