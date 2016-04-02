@@ -102,9 +102,9 @@ def plot_bin_fit(res_2d, ptmin, ptmax, hist_title, hist_name, graph, output, div
     h_res = res_2d.ProjectionY(hist_name, bin_low, bin_high)
     h_res.SetTitle(hist_title)
 
-    if h_res.GetEntries() > 0:
+    if h_res.Integral() > 0:
         peak = h_res.GetBinCenter(h_res.GetMaximumBin())
-        fit_res = h_res.Fit("gaus", "QESR", "R", peak - (1. * h_res.GetRMS()), peak + (1. * h_res.GetRMS()))
+        fit_res = h_res.Fit("gaus", "QES", "", peak - (1. * h_res.GetRMS()), peak + (1. * h_res.GetRMS()))
         # fit_res = h_res.Fit("gaus", "QESR", "R", h_res.GetMean() - 1. * h_res.GetRMS(), h_res.GetMean() + 1. * h_res.GetRMS())
         # fit_res = h_res.Fit("gaus", "QMS")
         print "gaus prob:", fit_res.Prob(), hist_name
