@@ -356,7 +356,7 @@ def plot_all_functions(functions, filename, eta_bins, et_min=0, et_max=30):
 
 
 def main(in_args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     parser.add_argument("lut", help="output LUT filename", default="my_lut.txt")
     parser.add_argument("--gct", help="Make LUT for GCT", action='store_true')

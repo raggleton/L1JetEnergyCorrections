@@ -226,7 +226,7 @@ def compile_pdf(tex_filename, pdf_filename, outdir, num_compilation=1, latex_cmd
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     args = parser.parse_args()
 

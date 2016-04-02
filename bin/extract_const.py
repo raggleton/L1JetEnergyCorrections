@@ -203,7 +203,7 @@ def plot_find_peak_mpl(means, eta_min, eta_max, output_dir):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     args = parser.parse_args()
 

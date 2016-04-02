@@ -447,7 +447,7 @@ def compile_pdf(texfile, pdffile, outdir, n=2):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     parser.add_argument("--detail", action="store_true", help="do all pt bin plots as well (takes much longer!)")
     parser.add_argument("--compare", help="filename to compare to <input> (e.g post-calibration)")

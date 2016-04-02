@@ -4,8 +4,7 @@ This script takes as input the output file from RunMatcher, and loops over
 matched genjet/L1 jet pairs, producing some plots that show off how
 calibrated (or uncalibrated) the jets are.
 
-Usage: see
-python checkCalibration.py -h
+Usage: python checkCalibration.py -h
 
 """
 
@@ -283,8 +282,7 @@ def plot_rsp_pt(inputfile, outputfile, absetamin, absetamax, pt_bins, pt_var, pt
 
 
 def main(in_args=sys.argv[1:]):
-    print in_args
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     parser.add_argument("output", help="output ROOT filename")
     parser.add_argument("--incl", action="store_true", help="Do inclusive eta plots")

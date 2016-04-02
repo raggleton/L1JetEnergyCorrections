@@ -60,6 +60,14 @@ pt_bins_8_wide = list(np.concatenate((np.arange(14, 54, 8),
                                       np.arange(54, 242, 20))))
 pt_bins_8_wide.append(250)
 
+# stage 2 version for higher pt
+pt_bins_stage2_8 = list(np.concatenate((np.arange(10, 320, 8),
+                                        np.arange(320, 1020, 20))))
+pt_bins_stage2_8_wide = list(np.concatenate((np.arange(10, 50, 8),
+                                             np.arange(50, 1020, 20))))
+
+
+
 # pt bins for doing checkCalibration.py
 # check_pt_bins = [[0, 20], [20, 40], [40, 60], [60, 80], [80, 120], [120, 200], [200, 300], [300, 500], [500, 1000]]
 check_pt_bins = [[0, 20], [20, 30], [30, 40], [40, 50], [50, 60], [60, 80], [80, 100], [100, 300], [300, 500], [500, 1000]]  # for HTT studies, focussing on low pt

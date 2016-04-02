@@ -7,9 +7,16 @@ from subprocess import call
 from sys import platform as _platform
 import numpy as np
 import math
+import argparse
+
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.TH1.SetDefaultSumw2(True)
+
+
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    """Make argparse respect space formatting (newlines, etc) AND show defaults"""
+    pass
 
 
 def open_pdf(pdf_filename):

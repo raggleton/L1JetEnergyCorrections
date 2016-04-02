@@ -678,7 +678,7 @@ def redo_correction_fit(inputfile, outputfile, absetamin, absetamax, fitfcn):
 
 
 def main(in_args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     parser.add_argument("output", help="output ROOT filename")
     parser.add_argument("--no-genjet-plots", action='store_false',

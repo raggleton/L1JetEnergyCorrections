@@ -37,6 +37,7 @@ import os
 import argparse
 import binning
 from binning import pairwise
+import common_utils as cu
 
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -297,10 +298,9 @@ def plot_resolution(inputfile, outputfile, ptBins, absetamin, absetamax):
     output_f.WriteTObject(res_graph_refVsref_diff)
 
 
-########### MAIN ########################
 def main(in_args=sys.argv[1:]):
     print in_args
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
     parser.add_argument("input", help="input ROOT filename")
     parser.add_argument("output", help="output ROOT filename")
     parser.add_argument("--incl", action="store_true", help="Do inclusive eta plots")
