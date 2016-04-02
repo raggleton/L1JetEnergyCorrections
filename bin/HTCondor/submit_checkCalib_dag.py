@@ -131,9 +131,14 @@ def submit_all_checkCalib_dags(pairs_files, max_l1_pt, log_dir, append,
                                       common_input_files=common_input_files,
                                       force_submit=force_submit)
         status_files.append(sfile)
-    status_files = list(chain.from_iterable(status_files))  # flatten the list
-    print 'All statuses:'
-    print 'DAGstatus.py ', ' '.join(status_files)
+
+    if len(status_files) > 0:
+        if not isinstance(status_files[0], str):
+            # flatten the list
+            status_files = list(chain.from_iterable(status_files))
+        print 'All statuses:'
+        print 'DAGstatus.py ', ' '.join(status_files)
+
 
 
 def submit_checkCalib_dag(pairs_file, max_l1_pt, log_dir, append,

@@ -180,9 +180,13 @@ def submit_all_matcher_dags(exe, ntuple_dirs, log_dir, append,
                                    append=append, force_submit=force_submit)
         status_files.append(sfile)
 
-    if status_files:
+    if len(status_files) > 0:
+        if not isinstance(status_files[0], str):
+            # flatten the list
+            status_files = list(chain.from_iterable(status_files))
         print 'All statuses:'
         print 'DAGstatus.py ', ' '.join(status_files)
+
 
 
 def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_min_pt, cleaning_cut,
