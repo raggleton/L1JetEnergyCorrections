@@ -294,15 +294,17 @@ def write_pt_compress_lut(lut_filename, hw_pt_orig, pt_index):
                 lut.write('%d %d\n' % (int(pt / 2), ind))
 
 
-def correct_iet(iet, corr_factor, right_shift):
+def correct_iet(iet, corr_factor, right_shift, add_factor=None):
     """Apply correction int to HW pt."""
     iet_new = iet * corr_factor
     iet_new = np.right_shift(iet_new, right_shift)
-    iet_new += iet
+    if add_factor == None:
+        add_factor = iet
+    iet_new += add_factor
     return iet_new
 
 
-def generate_corr_matrix(max_iet, max_hw_correction, right_shift):
+def generate_corr_matrix(max_iet, max_hw_correction, right_shift, add_factor=None):
     """Generate a matrix of corrected pt values (HW), where indices are iEt
     before correction (HW) and correction integer.
 
@@ -322,7 +324,8 @@ def generate_corr_matrix(max_iet, max_hw_correction, right_shift):
     # corr_m[x, y] holds iet post-correction for correction factor x on iet y
     corr_m = np.ndarray(shape=(max_hw_correction + 1, max_iet + 1), dtype=int)
     for i in range(max_hw_correction + 1):
-        corr_m[i] = correct_iet(np.arange(0, max_iet + 1), i, right_shift)
+        iet = np.arange(0, max_iet + 1)
+        corr_m[i] = correct_iet(iet, i, right_shift, add_factor=add_factor)
     return corr_m
 
 
