@@ -687,11 +687,11 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
-             'bo', label='Original', markersize=4, alpha=0.7)
+             'bo', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_compressed'],
-             'rd', label='Compressed', markersize=4, alpha=0.7)
+             'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
-             'gs', label='HW compressed', markersize=4, alpha=0.7)
+             'gv', label='HW compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Post-Correction pT [GeV]')
     plt.legend(loc=0)
@@ -729,11 +729,11 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['corr_orig'],
-             'bo', label='Original', markersize=4, alpha=0.7)
+             'bo', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['corr_compressed'],
-             'rd', label='Compressed', markersize=4, alpha=0.7)
+             'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['hw_pt_post_hw_corr_compressed'] / (1. * map_info['hw_pt_orig']),
-             'gs', label='HW compressed', markersize=4, alpha=0.7)
+             'gv', label='HW compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Correction')
     plt.ylim(0.5, 2.5)
@@ -743,10 +743,10 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
     plt.suptitle(title)
     plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_%d.pdf' % eta_ind))
 
-    plt.xlim(0, 150)
+    plt.xlim(0, 300)
     plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_%d.pdf' % eta_ind))
 
-    plt.xlim(5, 100)
+    plt.xlim(5, 300)
     plt.xscale('log')
     plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.pdf' % eta_ind))
 
