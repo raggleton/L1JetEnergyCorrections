@@ -134,11 +134,11 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
 
     last_num_bins = 111111111
 
-    def count_number_bins(new_pt_mapping):
+    def count_number_unique_ints(new_pt_mapping):
         """Count unique values, but only for whole number pts"""
         return len({v for k, v in new_pt_mapping.iteritems() if float(k).is_integer()})
 
-    while count_number_bins(new_pt_mapping) > target_num_bins:
+    while count_number_unique_ints(new_pt_mapping) > target_num_bins:
         last_num_bins = len(list(unique_everseen(new_pt_mapping.values())))
 
         print 'Got', last_num_bins, 'bins'
@@ -179,7 +179,7 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
             else:
                 start_ind += 1
 
-        if count_number_bins(new_pt_mapping) == last_num_bins:
+        if count_number_unique_ints(new_pt_mapping) == last_num_bins:
             print 'Stuck in a loop - you need to loosen merge_criterion, ' \
                   'or increase the number of bins'
             print 'Dumping mapping to file stuck_dump.txt'
@@ -193,7 +193,7 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
         if new_pt_mapping[i + 0.5] != new_pt_mapping[i]:
             new_pt_mapping[i + 0.5] = new_pt_mapping[i]
 
-    print count_number_bins(new_pt_mapping), 'compressed bins:'
+    print count_number_unique_ints(new_pt_mapping), 'compressed bins:'
     print len(set(new_pt_mapping.values())), 'compressed bins:'
     print sorted(set(new_pt_mapping.values()))
 
