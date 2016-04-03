@@ -23,6 +23,7 @@ from time import strftime
 import htcondenser as ht
 import condorCommon as cc
 import logging
+from itertools import chain
 
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -96,14 +97,24 @@ def submit_all_resolution_dags(pairs_files, max_l1_pt, log_dir, append,
     common_input_files = ['makeResolutionPlots.py', 'binning.py', 'common_utils.py']
     common_input_files = [os.path.join(os.path.dirname(os.getcwd()), f) for f in common_input_files]
 
+    status_files = []
+
     # Submit a DAG for each pairs file
     for pfile in pairs_files:
         print 'Processing', pfile
-        submit_resolution_dag(pairs_file=pfile, max_l1_pt=max_l1_pt,
-                              log_dir=log_dir, append=append,
-                              pu_bins=pu_bins, eta_bins=eta_bins,
-                              common_input_files=common_input_files,
-                              force_submit=force_submit)
+        sfile = submit_resolution_dag(pairs_file=pfile, max_l1_pt=max_l1_pt,
+                                      log_dir=log_dir, append=append,
+                                      pu_bins=pu_bins, eta_bins=eta_bins,
+                                      common_input_files=common_input_files,
+                                      force_submit=force_submit)
+        status_files.append(sfile)
+
+    if len(status_files) > 0:
+        if not isinstance(status_files[0], str):
+            # flatten the list
+            status_files = list(chain.from_iterable(status_files))
+        print 'All statuses:'
+        print 'DAGstatus.py ', ' '.join(status_files)
 
 
 def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
@@ -139,6 +150,11 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
         already exists.
         Oherwise, program quits before submission.
 
+    Returns
+    -------
+    list[str]
+        List of status filenames.
+
     """
     cc.check_file_exists(pairs_file)
 
@@ -158,6 +174,7 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
     pu_bins = pu_bins or [[-99, 999]]  # set ridiculous limits if no cut on PU
     status_files = []
     for (pu_min, pu_max) in pu_bins:
+        log.info('**** Doing PU bin %g - %g', pu_min, pu_max)
 
         log_stem = 'res.$(cluster).$(process)'
         res_jobs = ht.JobSet(exe='python',
@@ -186,8 +203,8 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
             res_output_files.append(out_file)
 
             job_args = ['makeResolutionPlots.py', pairs_file, out_file,
-                        '--excl', #'--maxPt', max_l1_pt,
-                        #'--PUmin', pu_min, '--PUmax', pu_max,
+                        '--excl', '--maxPt', max_l1_pt,
+                        '--PUmin', pu_min, '--PUmax', pu_max,
                         '--etaInd', ind]
 
             res_job = ht.Job(name='res_%d' % ind,
@@ -205,8 +222,8 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
             res_output_files.append(out_file)
 
             job_args = ['makeResolutionPlots.py', pairs_file, out_file,
-                        '--incl'] #, '--maxPt', max_l1_pt,
-                        # '--PUmin', pu_min, '--PUmax', pu_max]
+                        '--incl', '--maxPt', max_l1_pt,
+                        '--PUmin', pu_min, '--PUmax', pu_max]
             if incl != 'all':
                 job_args.append('--%s' % incl)
 
@@ -248,8 +265,8 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
         # Add all jobs to DAG, with necessary dependencies
         # ---------------------------------------------------------------------
         stem = 'res_%s_%s' % (strftime("%H%M%S"), cc.rand_str(3))
-        res_dag = ht.DAGMan(filename='%s.dag' % stem,
-                            status_file='%s.status' % stem)
+        res_dag = ht.DAGMan(filename=os.path.join(log_dir, '%s.dag' % stem),
+                            status_file=os.path.join(log_dir, '%s.status' % stem))
         for job in res_jobs:
             res_dag.add_job(job)
 
@@ -270,6 +287,7 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
 
     print 'For all statuses:'
     print 'DAGstatus.py', ' '.join(status_files)
+    return status_files
 
 
 if __name__ == "__main__":
