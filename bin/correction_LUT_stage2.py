@@ -77,8 +77,8 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
 
     # enforce truncation at 8 bits, since we only use bits 1:8
     if not merge_above or merge_above >= 255.:
-        print 'Overriding merge_above to', merge_above
         merge_above = 254.5
+        print 'Overriding merge_above to', merge_above
 
     if merge_above:
         # set all bins above this value to merge, and set to mean pt
@@ -97,7 +97,7 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
         # check it's a half number, then the bin above is for even number
         if float(merge_below).is_integer():
             merge_below += 0.5
-            print 'Overriding merge_below to', merge_below
+        print 'Overriding merge_below to', merge_below
 
         # set all bins below this value to merge, and set to mean pt
         merge_below_ind = bisect_left(new_pt_mapping.keys(), merge_below)

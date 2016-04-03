@@ -474,12 +474,12 @@ def main(in_args=sys.argv[1:]):
         else:
             print_Stage2_func_file(fits, args.lut)
 
-    if args.plots:
-        # Plot function mapping
-        for i, (eta_min, eta_max, fit_func) in enumerate(izip(etaBins[:-1], etaBins[1:], fits)):
-            if fit_func:
-                plot_file = os.path.join(out_dir, "correction_map_%g_%g.pdf" % (eta_min, eta_max))
-                plot_correction_map(fit_func, plot_file)
+    # if args.plots:
+    #     # Plot function mapping
+    #     for i, (eta_min, eta_max, fit_func) in enumerate(izip(etaBins[:-1], etaBins[1:], fits)):
+    #         if fit_func:
+    #             plot_file = os.path.join(out_dir, "correction_map_%g_%g.pdf" % (eta_min, eta_max))
+    #             plot_correction_map(fit_func, plot_file)
 
 
 if __name__ == "__main__":

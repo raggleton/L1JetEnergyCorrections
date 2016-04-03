@@ -107,6 +107,11 @@ def submit_all_checkCalib_dags(pairs_files, max_l1_pt, log_dir, append,
     force_submit : bool, optional
         If True, forces job submission even if proposed output files already exists.
         Otherwise, program quits before submission.
+
+    Returns
+    -------
+    list[str]
+        List of status filenames.
     """
     # Update the matcher script for the worker nodes
     setup_script = 'worker_setup.sh'
