@@ -18,7 +18,7 @@ from bisect import bisect_left
 from multifunc import MultiFunc
 import matplotlib.pyplot as plt
 from binning import pairwise
-from itertools import izip
+from itertools import izip, ifilterfalse
 from math import ceil
 
 
@@ -31,6 +31,28 @@ ROOT.TH1.SetDefaultSumw2(True)
 
 def round_to_half(num):
     return round(num * 2) / 2
+
+
+def unique_everseen(iterable, key=None):
+    """List unique elements, preserving order. Remember all elements ever seen.
+
+    Taken from https://docs.python.org/2/library/itertools.html#recipes
+
+    unique_everseen('AAAABBBCCDAABBB') --> A B C D
+    unique_everseen('ABBCcAD', str.lower) --> A B C D
+    """
+    seen = set()
+    seen_add = seen.add
+    if key is None:
+        for element in ifilterfalse(seen.__contains__, iterable):
+            seen_add(element)
+            yield element
+    else:
+        for element in iterable:
+            k = key(element)
+            if k not in seen:
+                seen_add(k)
+                yield element
 
 
 def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
@@ -113,13 +135,13 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
     last_num_bins = 111111111
 
     def count_number_bins(new_pt_mapping):
-        """Count inque values, but only for whole number pts"""
+        """Count unique values, but only for whole number pts"""
         return len({v for k, v in new_pt_mapping.iteritems() if float(k).is_integer()})
 
     while count_number_bins(new_pt_mapping) > target_num_bins:
-        last_num_bins = len(set(new_pt_mapping.values()))
+        last_num_bins = len(list(unique_everseen(new_pt_mapping.values())))
 
-        print 'Got', len(set(new_pt_mapping.values())), 'bins'
+        print 'Got', last_num_bins, 'bins'
         # start with larget number of bins, look at compatibility,
         # then reduce bin span if necessary
         start_ind = orig_start_ind
@@ -135,13 +157,14 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
 
             corrs = corr_orig[start_ind: end_ind + 1]
             if corrs.max() < (merge_criterion * corrs.min()):
+                len_pt_bins = len(list(unique_everseen(new_pt_mapping.values())))
 
                 # since the merge is greedy, but we want to use all our possible bins,
                 # we have to modify the last group to not go over our target number
                 if (end_ind < len(pt_orig) - 1 and
-                    target_num_bins > (len(set(new_pt_mapping.values())) - len(corrs))):
+                    target_num_bins > (len_pt_bins - len(corrs))):
 
-                    start_ind += target_num_bins - (len(set(new_pt_mapping.values())) - len(corrs)) - 1
+                    start_ind += target_num_bins - (len_pt_bins - len(corrs)) - 1
                     corrs = corr_orig[start_ind:end_ind + 1]
 
                 mean_pt = round_to_half(pt_orig[start_ind: end_ind + 1].mean())
@@ -204,7 +227,7 @@ def calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping):
 
     # Get indices of locations of new pt bins
     compr_pt = list(new_pt_mapping.values())
-    unique_pt = sorted(list(set(compr_pt)))  # sets are unordered!
+    unique_pt = unique_everseen(compr_pt)
     indices = [compr_pt.index(upt) for upt in unique_pt] + [len(corr_orig)]
 
     # Need to calculate new mean correction for each pt bin
@@ -479,7 +502,7 @@ def assign_pt_index(pt_values):
 
     """
     pt_values = list(pt_values)
-    unique_pt_values = sorted(set(pt_values))
+    unique_pt_values = unique_everseen(pt_values)
     unique_indices_map = {p: ind for ind, p in enumerate(unique_pt_values)}
     return [unique_indices_map[p] for p in pt_values]
 
