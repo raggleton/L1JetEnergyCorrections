@@ -404,6 +404,65 @@ def calc_hw_correction_ints(hw_pts, corrections, corr_matrix, cap_correction):
     return np.array(hw_corrections)
 
 
+def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift):
+    """For each pt bin calculate the integer correction factor and additive
+    factor that gives the closest factor to the equivalent entry in corrections.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    list[int], list[int]
+        List of HW correction integers; and list of HW correciton additions.
+        One per pt entry
+    """
+    print 'Assigning HW correction factors'
+
+    hw_corrections, hw_additions = [], []
+    corr_comp = list(map_info['corr_compressed'])
+    corr_comp_unique = unique_everseen(corr_comp)
+    corr_comp_unique_inds = [corr_comp.index(x) for x in corr_comp_unique] + [len(corr_comp)]
+    print corr_comp_unique_inds
+
+    hw_pt_orig = map_info['hw_pt_orig']
+    hw_pt_post = map_info['hw_pt_post_corr_orig']
+    for lo, hi in pairwise(corr_comp_unique_inds):
+        print '-----'
+        # average correction factor for this bin i.e. gradient
+        corr_factor = (hw_pt_post[hi-1] - hw_pt_post[lo]) / (1.* hw_pt_orig[hi-1] - hw_pt_orig[lo])
+
+        # add factor i.e. y-intercept
+        intercept = int(round(hw_pt_post[lo] - (corr_factor  * hw_pt_orig[lo])))
+
+        # get pre/post centers to get integer for this bin
+        mean_hw_pt_pre = int(round(0.5 * (hw_pt_orig[hi-1] + hw_pt_orig[lo])))
+        mean_hw_pt_post = int(round( (0.5 * (hw_pt_post[hi-1] + hw_pt_post[lo]))))
+
+        # subtract intercept as want factor just for gradient
+        corr_factor_int = calc_hw_corr_factor(corr_matrix, mean_hw_pt_pre, mean_hw_pt_post - intercept)
+
+        # subtlety - if corr_factor_int is the maximum it can be (but should be larger),
+        # then we will undercorrect. To compensate for this, we increase the intercept factor
+        if corr_factor_int == np.size(corr_matrix, 0) - 1:
+            diff = mean_hw_pt_post - correct_iet(mean_hw_pt_pre, corr_factor_int, right_shift, intercept)
+            intercept += int(round(diff))
+
+        for i in xrange(lo, hi):
+            hw_corrections.append(corr_factor_int)
+            hw_additions.append(intercept)
+
+        print 'Pre bin edges:', hw_pt_orig[lo], hw_pt_orig[hi-1]
+        print 'Post bin edges:', hw_pt_post[lo], hw_pt_post[hi-1]
+        print 'Mean pre/post:', mean_hw_pt_pre, mean_hw_pt_post
+        print 'Ideal corr factor, intercept:', corr_factor, intercept
+        print 'Applying y = mx + c to bin edges:', (hw_pt_orig[lo]*corr_factor) + intercept, (hw_pt_orig[hi-1]*corr_factor) + intercept
+        print 'Actual corr factor, add:', corr_factor_int, intercept
+        print 'Applying proper integer calc to bin edges:', correct_iet(hw_pt_orig[lo], corr_factor_int, right_shift, intercept), correct_iet(hw_pt_orig[hi-1], corr_factor_int, right_shift, intercept)
+
+    return np.array(hw_corrections), np.array(hw_additions)
+
+
 def write_stage2_correction_lut(lut_filename, mapping_info):
     """Write LUT that converts compressed address to correction factor.
 
@@ -425,6 +484,33 @@ def write_stage2_correction_lut(lut_filename, mapping_info):
         for eta_ind, map_info in mapping_info.iteritems():
             last_ind = -1
             for pt_ind, corr in izip(map_info['pt_index'], map_info['hw_corr_compressed']):
+                if pt_ind != last_ind:
+                    comment = '  # eta_bin %d, pt 0' % (eta_ind) if pt_ind == 0 else ''
+                    lut.write('%d %d%s\n' % (generate_address(pt_ind, eta_ind), corr, comment))
+                    last_ind = pt_ind
+
+
+def write_stage2_addition_lut(lut_filename, mapping_info):
+    """Write LUT that converts compressed address to correction addition.
+
+    Parameters
+    ----------
+    lut_filename : str
+        Filename for output LUT
+    mapping_info : TYPE
+        Description
+    """
+    print 'Making corr LUT', lut_filename
+    with open(lut_filename, 'w') as lut:
+        lut.write('# address to addition LUT\n')
+        lut.write('# maps 8 bits to 10 bits\n')
+        lut.write("# anything after # is ignored with the exception of the header\n")
+        lut.write("# the header is first valid line starting with ")
+        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> v1 8 10 </header>\n")
+        for eta_ind, map_info in mapping_info.iteritems():
+            last_ind = -1
+            for pt_ind, corr in izip(map_info['pt_index'], map_info['hw_corr_compressed_add']):
                 if pt_ind != last_ind:
                     comment = '  # eta_bin %d, pt 0' % (eta_ind) if pt_ind == 0 else ''
                     lut.write('%d %d%s\n' % (generate_address(pt_ind, eta_ind), corr, comment))
@@ -513,7 +599,8 @@ def assign_pt_index(pt_values):
 
 
 def print_Stage2_lut_files(fit_functions,
-                           eta_lut_filename, pt_lut_filename, corr_lut_filename,
+                           eta_lut_filename, pt_lut_filename,
+                           corr_lut_filename, corr_add_lut_filename,
                            corr_max, num_corr_bits, target_num_pt_bins,
                            merge_criterion, plot_dir):
     """Make LUTs for Stage 2.
@@ -625,10 +712,16 @@ def print_Stage2_lut_files(fit_functions,
                                        max_hw_correction=(2**num_corr_bits) - 1,
                                        right_shift=right_shift)
 
+    # Generate matrix of iet pre/post for different correction integers
+    # Only need to do it once beforehand, can be used for all eta bins
+    corr_matrix_add_none = generate_corr_matrix(max_iet=int(max_pt * 2),
+                                       max_hw_correction=(2**num_corr_bits) - 1,
+                                       right_shift=right_shift, add_factor=0)
+
     # figure out new correction mappings for each eta bin
     for eta_ind, func in enumerate(fit_functions):
         # if eta_ind>0:
-            # break
+        #     break
 
         # Dict to hold ALL info for this eta bin
         map_info = dict(pt_orig=pt_orig,  # original phys pt values
@@ -638,9 +731,11 @@ def print_Stage2_lut_files(fit_functions,
                         pt_index=pt_index,  # index for compressed pt
                         corr_orig=None,  # original correction factors (phys)
                         corr_compressed=None,  # correction factors after pt compression (phys)
-                        hw_corr_compressed=None,  # HW correction factor after pt compression
+                        hw_corr_compressed=None,  # HW correction mult factor after pt compression
+                        hw_corr_compressed_add=None,  # HW correction add factor after pt compression
                         pt_post_corr_orig=None,  # phys pt post original corrections
                         pt_post_corr_compressed=None,  # phys pt post compressed corrections
+                        hw_pt_post_corr_compressed=None,  # hw pt post compressed corrections
                         hw_pt_post_hw_corr_compressed=None,  # HW pt post HW correction factor
                         pt_post_hw_corr_compressed=None  # phys pt post HW correction factor
                         )
@@ -651,22 +746,31 @@ def print_Stage2_lut_files(fit_functions,
         map_info['corr_orig'] = corr_orig
 
         map_info['pt_post_corr_orig'] = pt_orig * corr_orig
+        map_info['hw_pt_post_corr_orig'] = (map_info['pt_post_corr_orig'] * 2.).astype(int)
 
         new_corr_mapping = calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping)
         map_info['corr_compressed'] = np.array(new_corr_mapping.values())
 
         map_info['pt_post_corr_compressed'] = pt_orig * map_info['corr_compressed']
+        map_info['hw_pt_post_corr_compressed'] = (map_info['pt_post_corr_compressed'] * 2.).astype(int)
 
         # then we calculate all the necessary correction integers
-        corr_ints = calc_hw_correction_ints(map_info['hw_pt_compressed'],
-                                            map_info['corr_compressed'],
-                                            corr_matrix,
-                                            cap_correction=corr_max)
-        map_info['hw_corr_compressed'] = corr_ints
+        # corr_ints = calc_hw_correction_ints(map_info['hw_pt_compressed'],
+        #                                     map_info['corr_compressed'],
+        #                                     corr_matrix,
+        #                                     cap_correction=corr_max)
+        # map_info['hw_corr_compressed'] = corr_ints
+
+        corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none, right_shift)
+        map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'] = corr_ints_new, add_ints
 
         # Store the result of applying the HW correction ints
-        hw_pt_post = [correct_iet(iet, cf, right_shift) for iet, cf
-                      in izip(map_info['hw_pt_orig'], map_info['hw_corr_compressed'])]
+        # hw_pt_post = [correct_iet(iet, cf, right_shift, add_factor=iet) for iet, cf,
+        #               in izip(map_info['hw_pt_orig'], map_info['hw_corr_compressed'])]
+
+        hw_pt_post = [correct_iet(iet, cf, right_shift, add_factor=af) for iet, cf, af
+                      in izip(map_info['hw_pt_orig'], map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'])]
+
         hw_pt_post = np.array(hw_pt_post)
         map_info['hw_pt_post_hw_corr_compressed'] = hw_pt_post
         map_info['pt_post_hw_corr_compressed'] = hw_pt_post * 0.5
@@ -677,8 +781,8 @@ def print_Stage2_lut_files(fit_functions,
 
         all_mapping_info[eta_ind] = map_info
 
-        if eta_ind in [0, 7]:
-            print_map_info(map_info)  # for debugging dict contents
+        # if eta_ind in [0, 7]:
+        #     print_map_info(map_info)  # for debugging dict contents
 
         # Print some plots to check results.
         # Show original corr, compressed corr, compressed corr from HW
@@ -689,6 +793,7 @@ def print_Stage2_lut_files(fit_functions,
 
     # put them into a LUT
     write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
+    write_stage2_addition_lut(corr_add_lut_filename, all_mapping_info)
 
 
 def print_map_info(map_info):
