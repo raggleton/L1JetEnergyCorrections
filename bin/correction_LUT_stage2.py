@@ -222,7 +222,6 @@ def calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping):
         raise IndexError('Different lengths for pt_orig, corr_orig')
     # hold correction mapping
     new_corr_mapping = {p: c for p, c in zip(pt_orig, corr_orig)}
-    new_corr_mapping[0] = 0.
     new_corr_mapping = OrderedDict(sorted(new_corr_mapping.items(), key=lambda t: t))
 
     # Get indices of locations of new pt bins
@@ -236,6 +235,9 @@ def calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping):
         for j in xrange(i_low, i_high):
             new_corr_mapping[pt_orig[j]] = mean_corr
 
+    # manually override
+    new_corr_mapping[0] = 0.
+    new_corr_mapping[0.5] = 0.
     return new_corr_mapping
 
 
