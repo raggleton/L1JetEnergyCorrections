@@ -1,11 +1,18 @@
 """Functions for printing LUTs for Stage 2
 
-Makes 2 LUTs:
+There are two types of output:
+- Output parameters for correction function(s) (to be used in emulator):
+    start from `print_Stage2_func_file`
+- LUTs that can be used in emulator or hardware:
+    start from `print_Stage2_lut_files`
 
-- one to convert pt to compressed index
-- one to map a correction factor to each index
+The latter is more tricky, as it requires various levels of compression.
+This makes LUTs:
+- convert ieta -> compressed eta index
+- convert iet -> compressed pt index
+- convert address (eta index + pt index) -> correction factor (+ optionally with addend)
 
-Gets pretty gnarly, improvements needed.
+Data structure for holding all this is not ideal - could do better.
 """
 
 
