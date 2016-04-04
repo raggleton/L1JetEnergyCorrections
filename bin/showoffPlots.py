@@ -201,7 +201,11 @@ def plot_eta_both(tree, oDir, cut="1", oFormat="pdf"):
 def plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"):
     """Plot the difference between L1 and ref jet pT, for given L1 pT, eta bin"""
     hname = "eta_%g_%g/Histograms/ptDiff_ref_%g_%g" % (eta_min, eta_max, pt_min, pt_max)
-    h_diff = cu.get_from_file(res_file, hname)
+    try:
+        h_diff = cu.get_from_file(res_file, hname)
+    except IOError:
+        print '!! Cannot get', hname
+        return None
     c = generate_canvas()
     h_diff.Draw()
     h_diff.SetMaximum(h_diff.GetMaximum() * 1.2)
@@ -217,7 +221,11 @@ def plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"
 def plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"):
     """Plot the L1 resolution for given L1 pT, eta bin"""
     hname = "eta_%g_%g/Histograms/res_l1_%g_%g" % (eta_min, eta_max, pt_min, pt_max)
-    h_res = cu.get_from_file(res_file, hname)
+    try:
+        h_res = cu.get_from_file(res_file, hname)
+    except IOError:
+        print '!! Cannot get', hname
+        return None
     c = generate_canvas()
     h_res.Draw()
     h_res.SetAxisRange(-2, 2, "X")
@@ -960,29 +968,28 @@ def main(in_args=sys.argv[1:]):
     # ------------------------------------------------------------------------
     if args.res:
         res_file = cu.open_root_file(args.res)
-        # pt_min = binning.pt_bins[10]
-        # pt_max = binning.pt_bins[11]
-        # for the first 4 bins - troublesome
-
         # exclusive eta graphs
-        # for emin, emax in izip(binning.eta_bins[:-1], binning.eta_bins[1:]):
-            # plot_res_all_pt([res_file], emin, emax, args.oDir, args.format)
+        for eta_min, eta_max in pairwise(binning.eta_bins):
+            plot_res_all_pt(res_file, eta_min, eta_max, args.oDir, args.format)
             # for pt_min, pt_max in izip(binning.pt_bins[4:-1], binning.pt_bins[5:]):
-            #     plot_pt_diff(res_file, emin, emax, pt_min, pt_max, args.oDir, args.format)
-            # plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, args.format)
+            #     plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, args.format)
+            #     plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, args.format)
 
         # inclusive eta graphs
         for (eta_min, eta_max) in [[0, 3], [3, 5]]:
+            print eta_min, eta_max
             plot_res_all_pt(res_file, eta_min, eta_max, args.oDir, args.format)
             plot_ptDiff_Vs_pt(res_file, eta_min, eta_max, args.oDir, args.format)
 
         # plot_eta_pt_rsp_2d(res_file, binning.eta_bins, binning.pt_bins[4:], args.oDir, args.format)
 
         # components of these:
-        for pt_min, pt_max in izip(binning.pt_bins[4:-1], binning.pt_bins[5:]):
-            plot_pt_diff(res_file, 0, 3, pt_min, pt_max, args.oDir, args.format)
-            # plot_pt_diff(res_file, 0, 5, pt_min, pt_max, args.oDir, args.format)
-            # plot_pt_diff(res_file, 3, 5, pt_min, pt_max, args.oDir, args.format)
+        # if args.detail:
+        #     ptBins = binning.pt_bins_stage2_8 if not forward_bin else binning.pt_bins_stage2_8_wide
+        #     for pt_min, pt_max in pairwise(ptBins):
+        #         plot_pt_diff(res_file, 0, 3, pt_min, pt_max, args.oDir, args.format)
+                # plot_pt_diff(res_file, 0, 5, pt_min, pt_max, args.oDir, args.format)
+                # plot_pt_diff(res_file, 3, 5, pt_min, pt_max, args.oDir, args.format)
 
         res_file.Close()
 
