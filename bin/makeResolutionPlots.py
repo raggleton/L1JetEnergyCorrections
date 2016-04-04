@@ -371,12 +371,11 @@ def main(in_args=sys.argv[1:]):
 
     # Do plots for inclusive eta
     # Skip if doing exlcusive and only 2 bins, or if only 1 bin
-    ptBins = binning.pt_bins_stage2_8
-    # ptBins = binning.pt_bins_stage2
     if args.incl and ((not args.excl and len(etaBins) >= 2) or (args.excl and len(etaBins)>2)):
         print "Doing inclusive eta"
-        # ptBins = binning.pt_bins if not etaBins[0] > 2.9 else binning.pt_bins_wide
-        plot_resolution(inputf, outputf, binning.pt_bins, etaBins[0], etaBins[-1], args.maxPt, args.PUmin, args.PUmax)
+        # ptBins = binning.pt_bins_stage2_hf if etaBins[0] > 2.9 else binning.pt_bins_stage2
+        ptBins = binning.pt_bins_stage2_8_wide if etaBins[0] > 2.9 else binning.pt_bins_stage2_8
+        plot_resolution(inputf, outputf, ptBins, etaBins[0], etaBins[-1], args.maxPt, args.PUmin, args.PUmax)
 
     if not args.incl and not args.excl:
         print "Not doing inclusive or exclusive - you must specify at least one!"
