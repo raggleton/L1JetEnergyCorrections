@@ -260,9 +260,8 @@ def submit_runCalib_dag(pairs_file, log_dir, append, pu_bins, eta_bins, common_i
         if not force_submit:
             for f in [final_file] + calib_output_files:
                 if os.path.isfile(f):
-                    print 'ERROR: output file already exists - not submitting'
-                    print 'FILE:', f
-                    return 1
+                    raise RuntimeError('Output file already exists - not submitting.'
+                   '\nTo bypass, use -f flag. \nFILE: %s' % f)
 
         # calib_dag.write()
         calib_dag.submit()

@@ -277,10 +277,8 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
         if not force_submit:
             for f in [final_file] + res_output_files:
                 if os.path.isfile(f):
-                    print 'ERROR: output file already exists - not submitting'
-                    print 'FILE:', f
-                    return 1
-
+                    raise RuntimeError('Output file already exists - not submitting.'
+                                       '\nTo bypass, use -f flag. \nFILE: %s' % f)
         # res_dag.write()
         res_dag.submit()
         status_files.append(res_dag.status_file)

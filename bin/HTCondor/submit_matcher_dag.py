@@ -309,7 +309,7 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
     if not force_submit:
         for f in [final_file] + match_output_files:
             if os.path.isfile(f):
-                raise RuntimeError('ERROR: output file already exists - not submitting.'
+                raise RuntimeError('Output file already exists - not submitting.'
                                    '\nTo bypass, use -f flag. \nFILE: %s' % f)
 
     # Add in hadding jobs
