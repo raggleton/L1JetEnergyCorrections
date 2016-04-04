@@ -228,7 +228,11 @@ def plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="p
 def plot_ptDiff_Vs_pt(res_file, eta_min, eta_max, oDir, oFormat='pdf'):
     """Plot (ptL1 - pTRef) Vs pTL1 for given eta bin"""
     hname = "eta_%g_%g/Histograms/ptDiff_ref_2d" % (eta_min, eta_max)
-    h_2d = cu.get_from_file(res_file, hname)
+    try:
+        h_2d = cu.get_from_file(res_file, hname)
+    except IOError:
+        print '!! Cannot get', hname
+        return None
     c = generate_canvas()
     ROOT.gStyle.SetPalette(55)
     h_2d.RebinX(16)
@@ -247,8 +251,11 @@ def plot_res_all_pt(res_file, eta_min, eta_max, oDir, oFormat="pdf"):
 
     # binned by ref pt
     grname = "eta_%g_%g/resRefRef_%g_%g_diff" % (eta_min, eta_max, eta_min, eta_max)
-
-    graph = cu.get_from_file(res_file, grname)
+    try:
+        graph = cu.get_from_file(res_file, grname)
+    except IOError:
+        print '!! Cannot get', grname
+        return None
     # leg = generate_legend()
     mg = ROOT.TMultiGraph()
     i = 0
