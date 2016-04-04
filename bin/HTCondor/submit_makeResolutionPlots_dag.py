@@ -185,7 +185,7 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
                              out_dir=log_dir, out_file=log_stem + '.out',
                              err_dir=log_dir, err_file=log_stem + '.err',
                              log_dir=log_dir, log_file=log_stem + '.log',
-                             cpus=1, memory='100MB', disk='100MB',
+                             cpus=1, memory='500MB', disk='500MB',
                              transfer_hdfs_input=False,
                              common_input_files=common_input_files,
                              hdfs_store=out_dir)
@@ -216,7 +216,7 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
 
         # Add inclusive bins (central, forward, all)
         # remove the [0:1] to do all - currently central only 'cos HF broke
-        for incl in ['central', 'forward', 'all'][0:1]:
+        for incl in ['central', 'forward', 'all'][0:2]:
             out_file = out_stem + "_%s" % incl + append.format(**fmt_dict) + '.root'
             out_file = os.path.join(out_dir, out_file)
             res_output_files.append(out_file)
@@ -246,7 +246,7 @@ def submit_resolution_dag(pairs_file, max_l1_pt, log_dir, append,
                               out_dir=log_dir, out_file=log_stem + '.out',
                               err_dir=log_dir, err_file=log_stem + '.err',
                               log_dir=log_dir, log_file=log_stem + '.log',
-                              cpus=1, memory='100MB', disk='20MB',
+                              cpus=1, memory='500MB', disk='100MB',
                               transfer_hdfs_input=False,
                               hdfs_store=out_dir)
 
