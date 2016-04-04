@@ -3,6 +3,8 @@
 Little script to plot several graphs and/or fit functions on the same canvas.
 Can take any graph, from any file.
 
+For calibration curve plots
+
 TODO: expand to hists?
 """
 

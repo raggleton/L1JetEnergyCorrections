@@ -11,7 +11,7 @@ Stored as `resL1_<eta_min>_<eta_max>`.
 - (pT(L1) - pT(Ref))/pT(Ref), calculated on a pair-by-pair basis, binned in pT(L1).
 Stored as `resRefL1_<eta_min>_<eta_max>`.
 
-- (pT(L1) - pT(Ref))/pT(Ref), calculated on a pair-by-pair basis, binned in pT(L1).
+- (pT(L1) - pT(Ref))/pT(Ref), calculated on a pair-by-pair basis, binned in pT(Ref).
 Stored as `resRefRef_<eta_min>_<eta_max>`.
 
 - use the width of the pT(L1) - pT(Ref) distribution, then divide by the average pT(L1).
