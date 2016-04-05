@@ -470,6 +470,7 @@ def main(in_args=sys.argv[1:]):
                                    corr_add_lut_filename=corr_add_lut_filename,
                                    right_shift=9,
                                    num_corr_bits=10,
+                                   num_add_bits=8,
                                    target_num_pt_bins=2**4,
                                    merge_criterion=1.05,
                                    plot_dir=out_dir)

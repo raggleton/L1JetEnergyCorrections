@@ -411,12 +411,23 @@ def calc_hw_correction_ints(hw_pts, corrections, corr_matrix, cap_correction):
     return np.array(hw_corrections)
 
 
-def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift):
+def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add_bits):
     """For each pt bin calculate the integer correction factor and additive
     factor that gives the closest factor to the equivalent entry in corrections.
 
     Parameters
     ----------
+    map_info : dict
+        Kitchen sink
+
+    corr_matrix : numpy.ndarray
+        Pre-filled matrix of {corr int, iet} => (iet*corr int) >> X
+
+    right_shift : int
+        Number of bits for right shift
+
+    num_add_bits : int
+        Num of bits for the addend
 
     Returns
     -------
@@ -454,6 +465,13 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift):
         if corr_factor_int == np.size(corr_matrix, 0) - 1:
             diff = mean_hw_pt_post - correct_iet(mean_hw_pt_pre, corr_factor_int, right_shift, intercept)
             intercept += int(round(diff))
+
+        # check interecpt (i.e addend) fits into specified num of bits
+        # saturate if not. also accounts for -ve addend
+        if abs(intercept) > (2**(num_add_bits-1) - 1):
+            sign = 1 if intercept > 0 else -1
+            intercept = (2**(num_add_bits-1) - 1) * sign
+            print 'WARNING: having to saturate addend'
 
         for i in xrange(lo, hi):
             hw_corrections.append(corr_factor_int)
@@ -608,7 +626,8 @@ def assign_pt_index(pt_values):
 def print_Stage2_lut_files(fit_functions,
                            eta_lut_filename, pt_lut_filename,
                            corr_lut_filename, corr_add_lut_filename,
-                           right_shift, num_corr_bits, target_num_pt_bins,
+                           right_shift, num_corr_bits, num_add_bits,
+                           target_num_pt_bins,
                            merge_criterion, plot_dir):
     """Make LUTs for Stage 2.
 
@@ -635,7 +654,10 @@ def print_Stage2_lut_files(fit_functions,
         Right-shift factor needed in hardware for multiplication
 
     num_corr_bits: int
-        Number of bits to represent correction factor.
+        Number of bits to represent correction multiplicative factor.
+
+    num_add_bits: int
+        Number of bits to represent correction addend.
 
     target_num_pt_bins: int
         Number of bins to compress pt bin range into. If you have N bits for pt,
@@ -665,6 +687,7 @@ def print_Stage2_lut_files(fit_functions,
     print ' - target num pt bins (per eta bin):', target_num_pt_bins
     print ' - merge criterion:', merge_criterion
     print ' - # corr bits:', num_corr_bits
+    print ' - # addend bits:', num_add_bits
     print ' - right shift:', right_shift
 
     max_pt = (2**11 - 1) * 0.5
@@ -706,15 +729,15 @@ def print_Stage2_lut_files(fit_functions,
 
     # Generate matrix of iet pre/post for different correction integers
     # Only need to do it once beforehand, can be used for all eta bins
-    corr_matrix = generate_corr_matrix(max_iet=int(max_pt * 2),
-                                       max_hw_correction=(2**num_corr_bits) - 1,
-                                       right_shift=right_shift)
+    # corr_matrix = generate_corr_matrix(max_iet=int(max_pt * 2),
+    #                                    max_hw_correction=(2**num_corr_bits) - 1,
+    #                                    right_shift=right_shift)
 
     # Generate matrix of iet pre/post for different correction integers
     # Only need to do it once beforehand, can be used for all eta bins
     corr_matrix_add_none = generate_corr_matrix(max_iet=int(max_pt * 2),
-                                       max_hw_correction=(2**num_corr_bits) - 1,
-                                       right_shift=right_shift, add_factor=0)
+                                                max_hw_correction=(2**num_corr_bits) - 1,
+                                                right_shift=right_shift, add_factor=0)
 
     # figure out new correction mappings for each eta bin
     for eta_ind, func in enumerate(fit_functions):
@@ -759,7 +782,7 @@ def print_Stage2_lut_files(fit_functions,
         #                                     cap_correction=corr_max)
         # map_info['hw_corr_compressed'] = corr_ints
 
-        corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none, right_shift)
+        corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none, right_shift, num_add_bits)
         map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'] = corr_ints_new, add_ints
 
         # Store the result of applying the HW correction ints
