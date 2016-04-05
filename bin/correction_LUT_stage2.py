@@ -608,7 +608,7 @@ def assign_pt_index(pt_values):
 def print_Stage2_lut_files(fit_functions,
                            eta_lut_filename, pt_lut_filename,
                            corr_lut_filename, corr_add_lut_filename,
-                           corr_max, num_corr_bits, target_num_pt_bins,
+                           right_shift, num_corr_bits, target_num_pt_bins,
                            merge_criterion, plot_dir):
     """Make LUTs for Stage 2.
 
@@ -631,9 +631,8 @@ def print_Stage2_lut_files(fit_functions,
     corr_lut_filename: str
         Filename for output LUT that converts address to factor
 
-    corr_max: float
-        Maximum for correction factors. Determines the right-shift factor needed
-        in hardware
+    right_shift: int
+        Right-shift factor needed in hardware for multiplication
 
     num_corr_bits: int
         Number of bits to represent correction factor.
@@ -659,16 +658,8 @@ def print_Stage2_lut_files(fit_functions,
     # Plot LUT for eta compression
     write_eta_compress_lut(eta_lut_filename)
 
-    if corr_max <= 2:
-        right_shift = num_corr_bits
-    elif corr_max <= 3:
-        right_shift = num_corr_bits - 1
-    elif corr_max <= 5:
-        right_shift = num_corr_bits - 2
-    elif corr_max <= 7:
-        right_shift = num_corr_bits - 3
-    else:
-        raise RuntimeError('Correction factor > 7 sounds dangerous!')
+    if right_shift != 9:
+        raise RuntimeError('right_shfit should be 9 - check with Jim/Andy!')
 
     print 'Running Stage 2 LUT making with:'
     print ' - target num pt bins (per eta bin):', target_num_pt_bins
