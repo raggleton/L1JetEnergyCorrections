@@ -488,6 +488,42 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add
     return np.array(hw_corrections), np.array(hw_additions)
 
 
+def generate_add_mult(add, mult):
+    """Convert addition and multiplication factors into one integer"""
+    return (add<<10) + mult
+
+
+def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info):
+    """Write LUT that converts compressed address to both addend and multiplier
+    (combined into one integer)
+
+    Parameters
+    ----------
+    lut_filename : str
+        Filename for output LUT
+    mapping_ifno : dict
+        All the info
+    """
+    print 'Making add+corr LUT', lut_filename
+    with open(lut_filename, 'w') as lut:
+        lut.write('# address to addend+multiplicative factor LUT\n')
+        lut.write('# maps 8 bits to 18 bits\n')
+        lut.write('# 18 bits = (addend<<10) + multiplier)\n')
+        lut.write("# anything after # is ignored with the exception of the header\n")
+        lut.write("# the header is first valid line starting with ")
+        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> v1 8 18 </header>\n")
+        for eta_ind, map_info in mapping_info.iteritems():
+            last_ind = -1
+            for pt_ind, corr, add in izip(map_info['pt_index'],
+                                          map_info['hw_corr_compressed'],
+                                          map_info['hw_corr_compressed_add']):
+                if pt_ind != last_ind:
+                    comment = '  # eta_bin %d, pt 0' % (eta_ind) if pt_ind == 0 else ''
+                    lut.write('%d %d%s\n' % (generate_address(pt_ind, eta_ind), generate_add_mult(add, corr), comment))
+                    last_ind = pt_ind
+
+
 def write_stage2_correction_lut(lut_filename, mapping_info):
     """Write LUT that converts compressed address to correction factor.
 
@@ -532,7 +568,7 @@ def write_stage2_addition_lut(lut_filename, mapping_info):
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
         lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
-        lut.write("#<header> v1 8 10 </header>\n")
+        lut.write("#<header> v1 8 8 </header>\n")
         for eta_ind, map_info in mapping_info.iteritems():
             last_ind = -1
             for pt_ind, corr in izip(map_info['pt_index'], map_info['hw_corr_compressed_add']):
@@ -625,7 +661,7 @@ def assign_pt_index(pt_values):
 
 def print_Stage2_lut_files(fit_functions,
                            eta_lut_filename, pt_lut_filename,
-                           corr_lut_filename, corr_add_lut_filename,
+                           corr_lut_filename, add_lut_filename, add_mult_lut_filename,
                            right_shift, num_corr_bits, num_add_bits,
                            target_num_pt_bins,
                            merge_criterion, plot_dir):
@@ -648,7 +684,13 @@ def print_Stage2_lut_files(fit_functions,
         Filename for output LUT that converts pt to compressed index
 
     corr_lut_filename: str
-        Filename for output LUT that converts address to factor
+        Filename for output LUT that converts address to multiplicative factor
+
+    add_lut_filename: str
+        Filename for output LUT that converts address to correction addend
+
+    corr_mult_lut_filename: str
+        Filename for output LUT that converts address to addend + multiplier
 
     right_shift: int
         Right-shift factor needed in hardware for multiplication
@@ -814,7 +856,8 @@ def print_Stage2_lut_files(fit_functions,
 
     # put them into a LUT
     write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
-    write_stage2_addition_lut(corr_add_lut_filename, all_mapping_info)
+    write_stage2_addition_lut(add_lut_filename, all_mapping_info)
+    write_stage2_addend_multiplicative_lut(add_mult_lut_filename, all_mapping_info)
 
 
 def print_map_info(map_info):
