@@ -290,7 +290,7 @@ def write_pt_compress_lut(lut_filename, hw_pt_orig, pt_index):
         lut.write('# the 1st column is the integer value after selecting bits 1:8\n')
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
-        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
         lut.write("#<header> v1 8 4 </header>\n")
         for pt, ind in izip(hw_pt_orig, pt_index):
             if pt > 511:
@@ -511,7 +511,7 @@ def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info):
         lut.write('# 18 bits = (addend<<10) + multiplier)\n')
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
-        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
         lut.write("#<header> v1 8 18 </header>\n")
         for eta_ind, map_info in mapping_info.iteritems():
             last_ind = -1
@@ -540,7 +540,7 @@ def write_stage2_correction_lut(lut_filename, mapping_info):
         lut.write('# maps 8 bits to 10 bits\n')
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
-        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
         lut.write("#<header> v1 8 10 </header>\n")
         for eta_ind, map_info in mapping_info.iteritems():
             last_ind = -1
@@ -603,8 +603,8 @@ def write_eta_compress_lut(lut_filename, nbits_in):
         lut.write("# Converts abs(ieta) (6 bits) into 4 bit index\n")
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
-        lut.write("#<header> versionStr(unused but may be in future) nrBitsAddress nrBitsData </header>\n")
-        lut.write("#<header> v1 6 4 </header>\n")
+        lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
+        lut.write("#<header> v1 %d 4 </header>\n" % nbits_in)
         for ieta in range(1, 42):
             line = "%d %d\n" % (ieta, ieta_to_index(ieta))
             lut.write(line)
