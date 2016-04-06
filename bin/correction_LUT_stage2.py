@@ -587,13 +587,15 @@ def ieta_to_index(ieta):
         return int(ceil((ieta - 29) / 3.)) + 6
 
 
-def write_eta_compress_lut(lut_filename):
+def write_eta_compress_lut(lut_filename, nbits_in):
     """Write LUT that converts ieta to eta index.
 
     Parameters
     ----------
     lut_filename : str
         filename for LUT
+    nbits_in : int
+        Number of bits for ieta
     """
     print "Making eta compression LUT"
     with open(lut_filename, 'w') as lut:
@@ -605,6 +607,10 @@ def write_eta_compress_lut(lut_filename):
         lut.write("#<header> v1 6 4 </header>\n")
         for ieta in range(1, 42):
             line = "%d %d\n" % (ieta, ieta_to_index(ieta))
+            lut.write(line)
+        # padding extra bits we don't need
+        for ieta in range(42, (2**nbits_in) + 1):
+            line = "%d 0\n" % (ieta)
             lut.write(line)
 
 
@@ -720,7 +726,7 @@ def print_Stage2_lut_files(fit_functions,
     """
 
     # Plot LUT for eta compression
-    write_eta_compress_lut(eta_lut_filename)
+    write_eta_compress_lut(eta_lut_filename, nbits_in=6)
 
     if right_shift != 9:
         raise RuntimeError('right_shfit should be 9 - check with Jim/Andy!')
