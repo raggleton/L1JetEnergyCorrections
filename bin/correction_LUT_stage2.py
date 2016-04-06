@@ -811,12 +811,6 @@ def print_Stage2_lut_files(fit_functions,
 
     # Generate matrix of iet pre/post for different correction integers
     # Only need to do it once beforehand, can be used for all eta bins
-    # corr_matrix = generate_corr_matrix(max_iet=int(max_pt * 2),
-    #                                    max_hw_correction=(2**num_corr_bits) - 1,
-    #                                    right_shift=right_shift)
-
-    # Generate matrix of iet pre/post for different correction integers
-    # Only need to do it once beforehand, can be used for all eta bins
     corr_matrix_add_none = generate_corr_matrix(max_iet=int(max_pt * 2),
                                                 max_hw_correction=(2**num_corr_bits) - 1,
                                                 right_shift=right_shift, add_factor=0)
@@ -858,21 +852,14 @@ def print_Stage2_lut_files(fit_functions,
         map_info['hw_pt_post_corr_compressed'] = (map_info['pt_post_corr_compressed'] * 2.).astype(int)
 
         # then we calculate all the necessary correction integers
-        # corr_ints = calc_hw_correction_ints(map_info['hw_pt_compressed'],
-        #                                     map_info['corr_compressed'],
-        #                                     corr_matrix,
-        #                                     cap_correction=corr_max)
-        # map_info['hw_corr_compressed'] = corr_ints
-
         corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none, right_shift, num_add_bits)
         map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'] = corr_ints_new, add_ints
 
         # Store the result of applying the HW correction ints
-        # hw_pt_post = [correct_iet(iet, cf, right_shift, add_factor=iet) for iet, cf,
-        #               in izip(map_info['hw_pt_orig'], map_info['hw_corr_compressed'])]
-
         hw_pt_post = [correct_iet(iet, cf, right_shift, add_factor=af) for iet, cf, af
-                      in izip(map_info['hw_pt_orig'], map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'])]
+                      in izip(map_info['hw_pt_orig'],
+                              map_info['hw_corr_compressed'],
+                              map_info['hw_corr_compressed_add'])]
 
         hw_pt_post = np.array(hw_pt_post)
         map_info['hw_pt_post_hw_corr_compressed'] = hw_pt_post
