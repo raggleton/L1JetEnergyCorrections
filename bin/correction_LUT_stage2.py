@@ -488,12 +488,34 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add
     return np.array(hw_corrections), np.array(hw_additions)
 
 
-def generate_add_mult(add, mult):
-    """Convert addition and multiplication factors into one integer"""
-    return (add<<10) + mult
+def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
+    """Convert addition and multiplication factors into one integer.
+
+    Note that to handle -ve addends, we need to flip the leftmost bit.
+
+    Parameters
+    ----------
+    add : int
+        Addend integer
+    mult : int
+        Multiplier integer
+    num_add_bits : int
+        Number of bits to hold addend
+    num_mult_bits : int
+        Number of bits to hold multiplier
+
+    Returns
+    -------
+    int
+        Combined addend & multiplier.
+    """
+    if add < 0:
+        add = abs(add)
+        add += 2**(num_add_bits - 1)
+    return (add<<num_mult_bits) + mult
 
 
-def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info):
+def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info, num_add_bits, num_mult_bits):
     """Write LUT that converts compressed address to both addend and multiplier
     (combined into one integer)
 
@@ -503,16 +525,22 @@ def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info):
         Filename for output LUT
     mapping_ifno : dict
         All the info
+    num_add_bits : int
+        Number of bits to hold addend
     """
     print 'Making add+corr LUT', lut_filename
+    num_input_bits = 11
+    num_tot_bits = num_add_bits + num_mult_bits
     with open(lut_filename, 'w') as lut:
         lut.write('# address to addend+multiplicative factor LUT\n')
-        lut.write('# maps 8 bits to 18 bits\n')
-        lut.write('# 18 bits = (addend<<10) + multiplier)\n')
+        lut.write('# maps %d bits to %d bits\n' % (num_input_bits, num_tot_bits))
+        lut.write('# 18 bits = (addend<<%d) + multiplier)\n' % num_mult_bits)
+        lut.write('# addend is signed %d bits, multiplier is %d bits\n' % (num_add_bits, num_mult_bits))
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
         lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
-        lut.write("#<header> v1 8 18 </header>\n")
+        lut.write("#<header> v1 %d %d </header>\n" % (num_input_bits, num_tot_bits))
+        counter = 0
         for eta_ind, map_info in mapping_info.iteritems():
             last_ind = -1
             for pt_ind, corr, add in izip(map_info['pt_index'],
@@ -520,8 +548,14 @@ def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info):
                                           map_info['hw_corr_compressed_add']):
                 if pt_ind != last_ind:
                     comment = '  # eta_bin %d, pt 0' % (eta_ind) if pt_ind == 0 else ''
-                    lut.write('%d %d%s\n' % (generate_address(pt_ind, eta_ind), generate_add_mult(add, corr), comment))
+                    lut.write('%d %d%s\n' % (generate_address(pt_ind, eta_ind),
+                                             generate_add_mult(add, corr, num_add_bits, num_mult_bits),
+                                             comment))
                     last_ind = pt_ind
+                    counter += 1
+        # add padding
+        for i in range(counter, (2**num_input_bits)):
+            lut.write('%d 0 # dummy\n' % i)
 
 
 def write_stage2_correction_lut(lut_filename, mapping_info):
@@ -863,7 +897,7 @@ def print_Stage2_lut_files(fit_functions,
     # put them into a LUT
     write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
     write_stage2_addition_lut(add_lut_filename, all_mapping_info)
-    write_stage2_addend_multiplicative_lut(add_mult_lut_filename, all_mapping_info)
+    write_stage2_addend_multiplicative_lut(add_mult_lut_filename, all_mapping_info, num_add_bits, num_corr_bits)
 
 
 def print_map_info(map_info):
