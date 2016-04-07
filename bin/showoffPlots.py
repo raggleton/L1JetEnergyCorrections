@@ -495,51 +495,6 @@ def plot_rsp_Vs_pt_candle_violin(check_file, eta_min, eta_max, ptVar, oDir, oFor
     gr.Draw("LP")
     c.SaveAs("%s/h2d_rsp_%s_%g_%g_violin.%s" % (oDir, 'l1' if ptVar == 'l1' else 'ref', eta_min, eta_max, oFormat))
 
-def plot_rsp_eta_inclusive_graph(check_file, eta_min, eta_max, pt_var, oDir, oFormat="pdf"):
-    """Plot a graph of response vs L1 eta."""
-    grname = "eta_%g_%g/gr_rsp_%s_eta_%g_%g" % (eta_min, eta_max, pt_var, eta_min, eta_max)
-
-    graph = cu.get_from_file(check_file, grname)
-
-    c = generate_canvas(plot_title)
-
-    # leg = generate_legend() #(0.4, 0.7, 0.87, 0.87) # top right
-    # leg = generate_legend()
-
-    mg = ROOT.TMultiGraph()
-
-    i = 0
-    graph.SetLineColor(plot_colors[i])
-    graph.SetMarkerColor(plot_colors[i])
-    graph.SetMarkerStyle(plot_markers[i])
-    mg.Add(graph)
-    # leg.AddEntry(graph, plot_labels[i], "LP")
-
-    # lines at 1, and +/- 0.1
-    line_central = ROOT.TLine(eta_min, 1, eta_max, 1)
-    line_plus = ROOT.TLine(eta_min, 1.1, eta_max, 1.1)
-    line_minus = ROOT.TLine(eta_min, 0.9, eta_max, 0.9)
-    line_central.SetLineWidth(2)
-    line_central.SetLineStyle(2)
-    for line in [line_plus, line_minus]:
-        line.SetLineWidth(2)
-        line.SetLineStyle(3)
-
-    # bundle all graphs into a TMultiGraph - set axes limits here
-    mg.Draw("ALP")
-    mg.GetYaxis().SetRangeUser(rsp_min, rsp_max)
-    mg.GetXaxis().SetLimits(eta_min, eta_max)
-    mg.GetXaxis().SetTitleSize(0.04)
-    mg.GetXaxis().SetTitleOffset(0.9)
-    # mg.GetYaxis().SetTitleSize(0.04)
-    mg.Draw("ALP")
-    mg.GetHistogram().SetTitle("%s;%s;%s" % (plot_title, eta_l1_str, rsp_str))
-
-    # leg.Draw()
-    [line.Draw() for line in [line_central, line_plus, line_minus]]
-    append = ""
-    c.SaveAs("%s/gr_rsp_eta_%g_%g%s.%s" % (oDir, eta_min, eta_max, append, oFormat))
-
 
 def plot_rsp_eta_exclusive_graph(check_file, eta_min, eta_max, pt_bins, pt_var, oDir, oFormat="pdf"):
     """Plot a graph of response vs L1 eta.
@@ -1058,8 +1013,6 @@ def main(in_args=sys.argv[1:]):
                 plot_rsp_pt_hists(check_file, eta_min, eta_max, ptBins, "ptRef", args.oDir, 'png')
 
             # graphs
-            plot_rsp_eta_inclusive_graph(check_file, eta_min, eta_max, 'pt', args.oDir, args.format)
-            plot_rsp_eta_inclusive_graph(check_file, eta_min, eta_max, 'ptRef', args.oDir, args.format)
             plot_rsp_eta_exclusive_graph(check_file, eta_min, eta_max, binning.check_pt_bins, 'pt', args.oDir, args.format)
             plot_rsp_eta_exclusive_graph(check_file, eta_min, eta_max, binning.check_pt_bins, 'ptRef', args.oDir, args.format)
 
