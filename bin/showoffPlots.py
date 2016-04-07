@@ -211,11 +211,14 @@ def plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"
     h_diff.SetMaximum(h_diff.GetMaximum() * 1.2)
     # h_diff.SetLineWidth(2)
     func = h_diff.GetListOfFunctions().At(0)
-    func.SetLineWidth(1)
+    if func:
+        func.SetLineWidth(2)
     h_diff.SetTitle("%g < %s < %g, %g < p_{T}^{%s} < %g;%s;N" % (eta_min, eta_l1_str, eta_max, pt_min, ref_str, pt_max, pt_diff_str))
-    if not os.path.exists("%s/eta_%g_%g" % (oDir, eta_min, eta_max)):
-        os.makedirs("%s/eta_%g_%g" % (oDir, eta_min, eta_max))
-    c.SaveAs("%s/eta_%g_%g/pt_diff_eta_%g_%g_%g_%g.%s" % (oDir, eta_min, eta_max, eta_min, eta_max, pt_min, pt_max, oFormat))
+    subdir = "%s/eta_%g_%g" % (oDir, eta_min, eta_max)
+    cu.check_dir_exists_create("%s/eta_%g_%g" % (oDir, eta_min, eta_max))
+    filename = "%s/pt_diff_eta_%g_%g_%g_%g.%s" % (subdir, eta_min, eta_max, pt_min, pt_max, oFormat)
+    c.SaveAs(filename)
+    return filename
 
 
 def plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"):
@@ -230,7 +233,11 @@ def plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="p
     h_res.Draw()
     h_res.SetAxisRange(-2, 2, "X")
     h_res.SetTitle(";%s;N" % res_l1_str)
-    c.SaveAs("%s/res_l1_eta_%g_%g_%g_%g.%s" % (oDir, eta_min, eta_max, pt_min, pt_max, oFormat))
+    subdir = "%s/eta_%g_%g" % (oDir, eta_min, eta_max)
+    cu.check_dir_exists_create("%s/eta_%g_%g" % (oDir, eta_min, eta_max))
+    filename = "%s/res_l1_eta_%g_%g_%g_%g.%s" % (subdir, eta_min, eta_max, pt_min, pt_max, oFormat)
+    c.SaveAs(filename)
+    return filename
 
 
 def plot_ptDiff_Vs_pt(res_file, eta_min, eta_max, oDir, oFormat='pdf'):
@@ -249,7 +256,9 @@ def plot_ptDiff_Vs_pt(res_file, eta_min, eta_max, oDir, oFormat='pdf'):
     h_2d.GetYaxis().SetRangeUser(-120, 120)
     c.SetLogz()
     c.SetTicks(1, 1)
-    c.SaveAs("%s/h2d_ptDiff_ptRef_eta_%g_%g.%s" % (oDir, eta_min, eta_max, oFormat))
+    filename = "%s/h2d_ptDiff_ptRef_eta_%g_%g.%s" % (oDir, eta_min, eta_max, oFormat)
+    c.SaveAs(filename)
+    return filename
 
 
 def plot_res_all_pt(res_file, eta_min, eta_max, oDir, oFormat="pdf"):
@@ -923,18 +932,52 @@ def main(in_args=sys.argv[1:]):
     # ------------------------------------------------------------------------
     if args.res:
         res_file = cu.open_root_file(args.res)
+
         # exclusive eta graphs
         for eta_min, eta_max in pairwise(binning.eta_bins):
+            print eta_min, eta_max
+
             plot_res_all_pt(res_file, eta_min, eta_max, args.oDir, args.format)
-            # for pt_min, pt_max in izip(binning.pt_bins[4:-1], binning.pt_bins[5:]):
-            #     plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, args.format)
-            #     plot_res_pt_bin(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, args.format)
+
+            if args.detail:
+                list_dir = os.path.join(args.oDir, 'eta_%g_%g' % (eta_min, eta_max))
+                cu.check_dir_exists_create(list_dir)
+
+                pt_diff_filenames = []
+
+                ptBins = binning.pt_bins_stage2_8 if eta_min < 2.9 else binning.pt_bins_stage2_8_wide
+                for pt_min, pt_max in pairwise(ptBins):
+                    pt_diff_fname = plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, 'png')
+                    pt_diff_filenames.append(pt_diff_fname)
+
+                pt_diff_filenames_file = os.path.join(list_dir, 'list_pt_diff.txt')
+                write_filelist(pt_diff_filenames, pt_diff_filenames_file)
+
+                if args.gifs:
+                    make_gif(pt_diff_filenames_file, pt_diff_filenames_file.replace('.txt', '.gif'), args.gifexe)
 
         # inclusive eta graphs
         for (eta_min, eta_max) in [[0, 3], [3, 5]]:
             print eta_min, eta_max
             plot_res_all_pt(res_file, eta_min, eta_max, args.oDir, args.format)
             plot_ptDiff_Vs_pt(res_file, eta_min, eta_max, args.oDir, args.format)
+
+            if args.detail:
+                list_dir = os.path.join(args.oDir, 'eta_%g_%g' % (eta_min, eta_max))
+                cu.check_dir_exists_create(list_dir)
+
+                pt_diff_filenames = []
+
+                ptBins = binning.pt_bins_stage2_8 if eta_min < 2.9 else binning.pt_bins_stage2_8_wide
+                for pt_min, pt_max in pairwise(ptBins):
+                    pt_diff_fname = plot_pt_diff(res_file, eta_min, eta_max, pt_min, pt_max, args.oDir, 'png')
+                    pt_diff_filenames.append(pt_diff_fname)
+
+                pt_diff_filenames_file = os.path.join(list_dir, 'list_pt_diff.txt')
+                write_filelist(pt_diff_filenames, pt_diff_filenames_file)
+
+                if args.gifs:
+                    make_gif(pt_diff_filenames_file, pt_diff_filenames_file.replace('.txt', '.gif'), args.gifexe)
 
         # plot_eta_pt_rsp_2d(res_file, binning.eta_bins, binning.pt_bins[4:], args.oDir, args.format)
 
@@ -984,11 +1027,6 @@ def main(in_args=sys.argv[1:]):
                 if args.gifs:
                     for inf in [pt_plot_filenames_file, ptRef_plot_filenames_file]:
                         make_gif(inf, inf.replace('.txt', '.gif'), args.gifexe)
-                else:
-                    print "To make animated gif from PNGs using a plot list:"
-                    print "convert -dispose Background -delay 50 -loop 0 @%s " \
-                        "%s" % (pt_plot_filenames_file,
-                                os.path.basename(pt_plot_filenames_file).replace(".txt", ".gif"))
 
         # Graph of response vs pt, but in bins of eta
         x_range = [0, 150]  # for zoomed-in low pt
@@ -1028,11 +1066,9 @@ def main(in_args=sys.argv[1:]):
                 # component hists/fits for the eta graphs, binned by pt
                 for pt_min, pt_max in binning.check_pt_bins:
                     pt_filename = plot_rsp_eta_bin_pt(check_file, etamin, etamax, 'pt', pt_min, pt_max, args.oDir, 'png')
-                    if pt_filename:
-                        this_rsp_pt_plot_filenames.append(pt_filename)
+                    this_rsp_pt_plot_filenames.append(pt_filename)
                     ptRef_filename = plot_rsp_eta_bin_pt(check_file, etamin, etamax, 'ptRef', pt_min, pt_max, args.oDir, 'png')
-                    if ptRef_filename:
-                        this_rsp_ptRef_plot_filenames.append(ptRef_filename)
+                    this_rsp_ptRef_plot_filenames.append(ptRef_filename)
 
                 pt_list_file = os.path.join(args.oDir, 'list_pt_eta_%g_%g.txt' % (etamin, etamax))
                 write_filelist(this_rsp_pt_plot_filenames, pt_list_file)
