@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 from binning import pairwise
 from itertools import izip, ifilterfalse
 from math import ceil
+from string import maketrans
 
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -491,7 +492,7 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add
 def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
     """Convert addition and multiplication factors into one integer.
 
-    Note that to handle -ve addends, we need to flip the leftmost bit.
+    Note that to handle -ve addends, we need to do 2's complement.
 
     Parameters
     ----------
@@ -511,7 +512,10 @@ def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
     """
     if add < 0:
         add = abs(add)
-        add += 2**(num_add_bits - 1)
+        # there must be a better way... have to do it this way to ensure it's
+        # num_add_bits long
+        add_str = format(abs(add), '0%db' % num_add_bits).translate(maketrans('01', '10'))
+        add = int(add_str, 2) + 1
     return (add<<num_mult_bits) + mult
 
 
