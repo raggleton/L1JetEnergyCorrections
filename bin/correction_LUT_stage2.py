@@ -511,7 +511,6 @@ def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
         Combined addend & multiplier.
     """
     if add < 0:
-        add = abs(add)
         # there must be a better way... have to do it this way to ensure it's
         # num_add_bits long
         add_str = format(abs(add), '0%db' % num_add_bits).translate(maketrans('01', '10'))
@@ -538,7 +537,7 @@ def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info, num_add_b
     with open(lut_filename, 'w') as lut:
         lut.write('# address to addend+multiplicative factor LUT\n')
         lut.write('# maps %d bits to %d bits\n' % (num_input_bits, num_tot_bits))
-        lut.write('# 18 bits = (addend<<%d) + multiplier)\n' % num_mult_bits)
+        lut.write('# %d bits = (addend<<%d) + multiplier)\n' % (num_tot_bits, num_mult_bits))
         lut.write('# addend is signed %d bits, multiplier is %d bits\n' % (num_add_bits, num_mult_bits))
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
@@ -638,7 +637,7 @@ def write_eta_compress_lut(lut_filename, nbits_in):
     print "Making eta compression LUT"
     with open(lut_filename, 'w') as lut:
         lut.write("# ieta compression LUT\n")
-        lut.write("# Converts abs(ieta) (6 bits) into 4 bit index\n")
+        lut.write("# Converts abs(ieta) (%d bits) into 4 bit index\n" % nbits_in)
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
         lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
