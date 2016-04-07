@@ -51,13 +51,15 @@ NTUPLE_DIRS = [
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/QCDFlatFall15NoPU',
-    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/QCDFlatFall15NoPU',
+    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
-    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/QCDFlatFall15PU0to50NzshcalRaw',
+    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/QCDFlatFall15PU0to50NzshcalRaw',
+    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/QCDFlatFall15NoPU/',
+    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw/'
 ]
 
 # Pick one
