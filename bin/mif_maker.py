@@ -19,11 +19,9 @@ def lut_to_mif(args=sys.argv[1:]):
         ints = (int(line.split()[1].strip()) for line in lines)
         bins = [bin(x).replace('0b', '') for x in ints]
         nbits = int(args[2])
-        # IMPORTANT: the MIF file reads in the opposite order to the LUT
-        # so index = 0 is the LAST line of the MIF file
-        for b in reversed(bins[1:]):
+        for b in bins[:-1]:
             mif.write(b.zfill(nbits) + '\n')
-        mif.write(bins[0].zfill(nbits))  # no newline at end of file
+        mif.write(bins[-1].zfill(nbits))  # no newline at end of file
 
 
 if __name__ == "__main__":
