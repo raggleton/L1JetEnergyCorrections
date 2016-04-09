@@ -29,6 +29,13 @@ from itertools import izip, ifilterfalse
 from math import ceil
 from string import maketrans
 
+USE_SKLEARN = True
+try:
+    from sklearn.cluster import KMeans
+except ImportError:
+    print "Can't use the K-Means algorithm from scikit-learn"
+    print "Either install it (via pip / conda) or do without"
+    USE_SKLEARN = False
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gStyle.SetOptStat(0)
@@ -201,14 +208,101 @@ def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
         if new_pt_mapping[i + 0.5] != new_pt_mapping[i]:
             new_pt_mapping[i + 0.5] = new_pt_mapping[i]
 
-    print count_number_unique_ints(new_pt_mapping), 'compressed bins:'
-    print len(set(new_pt_mapping.values())), 'compressed bins:'
-    print sorted(set(new_pt_mapping.values()))
-
     mask = [k != v for k, v in new_pt_mapping.iteritems()]
     if any(mask):
         # -1 required with .index() as otherwise it picks up wrong index
         print 'Compressed above (inclusive):', pt_orig[mask.index(True) - 1]
+    else:
+        print 'No pT compression required'
+
+    return new_pt_mapping
+
+
+def calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig, target_num_bins,
+                                      merge_above=None, merge_below=None):
+    """Calculate new compressed pT binning using k-means classification
+    to group correction factors.
+
+    This uses the KMeans clustering algo in scikit-learn.
+
+    WARNING: it doesn not respect the position in the list, so if the function
+    turns over it will group them together
+    """
+    print 'Calculating new mapping for compressed ET'
+
+    # hold pt mapping
+    new_pt_mapping = {p: p for p in pt_orig}
+    new_pt_mapping[0] = 0.
+    new_pt_mapping = OrderedDict(sorted(new_pt_mapping.items(), key=lambda t: t))
+
+    end_ind = len(pt_orig) - 1
+
+    # enforce truncation at 8 bits, since we only use bits 1:8
+    if not merge_above or merge_above >= 255.:
+        merge_above = 254.5
+        print 'Overriding merge_above to', merge_above
+
+    if merge_above:
+        # set all bins above this value to merge, and set to mean pt
+        merge_above_ind = bisect_left(new_pt_mapping.keys(), merge_above)
+        mean_merge = round_to_half(np.array(new_pt_mapping.keys()[merge_above_ind:]).mean())
+        for ind, pt in enumerate(new_pt_mapping.iterkeys()):
+            if pt >= merge_above:
+                new_pt_mapping[pt] = mean_merge
+        end_ind = merge_above_ind
+
+    start_ind = 2
+
+    if merge_below:
+        # round to nearest 0.5
+        merge_below = round_to_half(merge_below)
+        # check it's a half number, then the bin above is for even number
+        if float(merge_below).is_integer():
+            merge_below += 0.5
+        print 'Overriding merge_below to', merge_below
+
+        # set all bins below this value to merge, and set to mean pt
+        merge_below_ind = bisect_left(new_pt_mapping.keys(), merge_below)
+        mean_merge = round_to_half(np.array(new_pt_mapping.keys()[1:merge_below_ind]).mean())
+        for ind, pt in enumerate(new_pt_mapping.iterkeys()):
+            # keep pt = 0 set to 0
+            if ind == 0:
+                continue
+            if pt <= merge_below:
+                new_pt_mapping[pt] = mean_merge
+        start_ind = merge_below_ind
+
+    # actually do the clustering
+    corr_data = corr_orig[start_ind: end_ind + 1]
+    int_mask = np.equal(np.mod(pt_orig[start_ind: end_ind + 1], 1), 0)
+    pt_int = pt_orig[start_ind: end_ind + 1][int_mask]  # remove half integer pTs
+    print 'pt_int:', pt_int
+    corr_int = corr_data[int_mask]  # remove half integer pTs
+    new_target_num_bins = target_num_bins - 3  # to accoutn for 0, merge_below, and merge_above
+    pred = KMeans(n_clusters=new_target_num_bins).fit_predict(corr_int.reshape(-1, 1))
+
+    # this gives us the index, but now we have to calculate the new means
+    # and fill the dict
+    for ind in xrange(new_target_num_bins):
+        cluster_mask = pred == ind
+        # print cluster_mask
+        # corr_mean = corr_int[cluster_mask].mean()
+        pt_mean = pt_int[cluster_mask].mean()
+        pt_lo = pt_int[cluster_mask][0]
+        pt_hi = pt_int[cluster_mask][-1]
+        for pt in np.arange(pt_lo, pt_hi +  1, 0.5):
+            # new_pt_mapping[pt] = corr_mean
+            new_pt_mapping[pt] = pt_mean
+
+    # now go back and set all the half integers to have same correction as whole integers
+    for i in range(len(pt_orig) / 2):
+        if new_pt_mapping[i + 0.5] != new_pt_mapping[i]:
+            new_pt_mapping[i + 0.5] = new_pt_mapping[i]
+
+    unique_mask = [k != v for k, v in new_pt_mapping.iteritems()]
+    if any(unique_mask):
+        # -1 required with .index() as otherwise it picks up wrong index
+        print 'Compressed above (inclusive):', pt_orig[unique_mask.index(True) - 1]
     else:
         print 'No pT compression required'
 
@@ -707,7 +801,8 @@ def print_Stage2_lut_files(fit_functions,
                            corr_lut_filename, add_lut_filename, add_mult_lut_filename,
                            right_shift, num_corr_bits, num_add_bits,
                            target_num_pt_bins,
-                           merge_criterion, plot_dir):
+                           merge_criterion, plot_dir,
+                           merge_algorithm):
     """Make LUTs for Stage 2.
 
     This creates 2 LUT files:
@@ -756,6 +851,14 @@ def print_Stage2_lut_files(fit_functions,
     plot_dir : str
         Directory to put checking plots.
 
+    merge_algorithm : str {'greedy' , 'kmeans'}
+        Merge algorithm to use to decide upon compressed ET binning.
+
+        greedy: my own algo, that merges bins within a certain tolerance until
+            you either meet the requisite number of bins, or clustering fails.
+
+        kmeans: use k-means algorithm in scikit-learn
+
     Raises
     ------
     IndexError
@@ -768,9 +871,14 @@ def print_Stage2_lut_files(fit_functions,
     if right_shift != 9:
         raise RuntimeError('right_shfit should be 9 - check with Jim/Andy!')
 
+    if merge_algorithm == 'kmeans' and not USE_SKLEARN:
+        print 'Reverting to greedy algo'
+        merge_algorithm = 'greedy'
+
     print 'Running Stage 2 LUT making with:'
     print ' - target num pt bins (per eta bin):', target_num_pt_bins
     print ' - merge criterion:', merge_criterion
+    print ' - merge algorithm:', merge_algorithm
     print ' - # corr bits:', num_corr_bits
     print ' - # addend bits:', num_add_bits
     print ' - right shift:', right_shift
@@ -794,17 +902,30 @@ def print_Stage2_lut_files(fit_functions,
     corr_orig = np.array([0.] + [fit_functions[eta_ind_lowest].Eval(pt)
                                  for pt in pt_orig if pt > 0])
 
-    # Find the optimal compressed pt binning
-    new_pt_mapping = calc_compressed_pt_mapping(pt_orig, corr_orig,
-                                                target_num_pt_bins,
-                                                merge_criterion,
-                                                merge_above, merge_below)
+    with open('corr_dump.txt', 'w') as dump:
+        dump.write(','.join(((str(x) for x in corr_orig))))
 
+    # Find the optimal compressed pt binning
+    if merge_algorithm == 'greedy':
+        new_pt_mapping = calc_compressed_pt_mapping(pt_orig, corr_orig,
+                                                    target_num_pt_bins,
+                                                    merge_criterion,
+                                                    merge_above, merge_below)
+    elif merge_algorithm == 'kmeans':
+        new_pt_mapping = calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig,
+                                                           target_num_pt_bins,
+                                                           merge_above, merge_below)
+    else:
+        raise RuntimeError('merge_algorithm argument incorrect')
     pt_compressed = np.array(new_pt_mapping.values())
     hw_pt_compressed = (pt_compressed * 2).astype(int)
 
     # figure out pt unique indices for each pt
     pt_index = np.array(assign_pt_index(hw_pt_compressed))
+    pt_index_list = list(pt_index)
+    bin_edges = [pt_orig[pt_index_list.index(i)] for i in xrange(0, target_num_pt_bins)]
+    print 'Compressed bin edges (physical pT in GeV):'
+    print ', '.join(str(i) for i in bin_edges)
 
     # make a lut to convert original pt (address) to compressed (index)
     write_pt_compress_lut(pt_lut_filename, hw_pt_orig, pt_index)

@@ -475,7 +475,8 @@ def main(in_args=sys.argv[1:]):
                                    num_add_bits=8,
                                    target_num_pt_bins=2**4,
                                    merge_criterion=1.05,
-                                   plot_dir=out_dir)
+                                   plot_dir=out_dir,
+                                   merge_algorithm='greedy')  # greedy or kmeans
         else:
             print_Stage2_func_file(fits, args.lut)
 
