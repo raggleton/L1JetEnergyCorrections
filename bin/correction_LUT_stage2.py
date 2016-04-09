@@ -43,6 +43,7 @@ ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.TH1.SetDefaultSumw2(True)
 
+MARKERS = ["o", "v", "^", "<", ">", "8", "s", "p", "*", "h", "H", "+", "x", "D", "d"]
 
 def round_to_half(num):
     return round(num * 2) / 2
@@ -995,15 +996,19 @@ def print_Stage2_lut_files(fit_functions,
 
         all_mapping_info[eta_ind] = map_info
 
-        # if eta_ind in [0, 7]:
-        #     print_map_info(map_info)  # for debugging dict contents
+        if eta_ind in [0, 7]:
+            print_map_info(map_info)  # for debugging dict contents
 
         # Print some plots to check results.
         # Show original corr, compressed corr, compressed corr from HW
         title = 'eta bin %d, target # bins %d, ' \
-                'merge criterion %.3f' % (eta_ind, target_num_pt_bins, merge_criterion)
+                'merge criterion %.3f, %s merge algo' % (eta_ind,
+                    target_num_pt_bins, merge_criterion, merge_algorithm)
         plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir)
         plot_corr_vs_pt(map_info, eta_ind, title, plot_dir)
+        plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir)
+        plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir)
+
 
     # put them into a LUT
     write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
@@ -1061,6 +1066,47 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
     plt.clf()
 
 
+def plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir):
+    """Plot map of pt (pre) -> pt (post), for original corrections,
+    compressed corrections, and HW integer corrections, to compare.
+
+    Parameters
+    ----------
+    map_info : dict
+        Holds np.ndarrays for various values
+    eta_ind : int
+        eta index for plot filename
+    title : str
+        Title to put on plot
+    plot_dir : str
+        Where to save the plot
+    """
+    cm = plt.cm.get_cmap('Set1')
+    plt.scatter(map_info['pt_orig'], map_info['pt_post_corr_orig'],
+                c=map_info['pt_index'], linewidth=0, cmap=cm)
+    plt.xlabel('Original pT [GeV]')
+    plt.ylabel('Post-Correction pT [GeV]')
+    plt.xlim(left=0)
+    plt.ylim(bottom=0)
+    # plt.legend(loc=0)
+    plt.minorticks_on()
+    plt.grid(which='both')
+    plt.suptitle(title)
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_%d.pdf' % eta_ind))
+
+    plt.xlim(0, 150)
+    plt.ylim(0, 150)
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_%d.pdf' % eta_ind))
+
+    plt.xlim(5, 100)
+    plt.ylim(5, 100)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_logX_%d.pdf' % eta_ind))
+
+    plt.clf()
+
+
 def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
     """Plot correction factor vs pT, for original corrections,
     compressed corrections, and HW correciton ints.
@@ -1097,6 +1143,44 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
     plt.xlim(5, 300)
     plt.xscale('log')
     plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.pdf' % eta_ind))
+
+    plt.clf()
+
+
+def plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir):
+    """Plot correction factor vs pT, for original corrections,
+    compressed corrections, and HW correciton ints.
+
+    Parameters
+    ----------
+    map_info : dict
+        Holds np.ndarrays for various values
+    eta_ind : int
+        eta index for plot filename
+    title : str
+        Title to put on plot
+    plot_dir : str
+        Where to save the plot
+    """
+    cm = plt.cm.get_cmap('Set1')
+    plt.scatter(map_info['pt_orig'], map_info['corr_orig'],
+                c=map_info['pt_index'], linewidth=0, cmap=cm)
+    plt.xlabel('Original pT [GeV]')
+    plt.ylabel('Correction')
+    plt.xlim(left=0)
+    plt.ylim(0.5, 2.5)
+    # plt.legend(loc=0)
+    plt.minorticks_on()
+    plt.grid(which='both')
+    plt.suptitle(title)
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_cluster_%d.pdf' % eta_ind))
+
+    plt.xlim(0, 300)
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_cluster_%d.pdf' % eta_ind))
+
+    plt.xlim(5, 300)
+    plt.xscale('log')
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.pdf' % eta_ind))
 
     plt.clf()
 
