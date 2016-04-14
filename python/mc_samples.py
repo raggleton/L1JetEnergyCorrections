@@ -69,12 +69,14 @@ samples = {
 
     "QCDFlatFall15PU0to50NzshcalRaw": Dataset(inputDataset="/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/RunIIFall15DR76-25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/GEN-SIM-RAW",
                                               useParent=False, unitsPerJob=10, totalUnits=-1),  # has about 9M events, 2K evt/file
+                                              # useParent=False, unitsPerJob=2, totalUnits=0.3),  # has about 9M events, 2K evt/file. Use this for cmsRunCondor
 
     "QCDFlatFall15PU0to50NzshcalRawRECO": Dataset(inputDataset="/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/RunIIFall15DR76-25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/AODSIM",
                                                   useParent=True, unitsPerJob=1, totalUnits=-1),  # has about 9M events, 9k evt/file
 
     "QCDFlatFall15NoPU": Dataset(inputDataset="/QCD_Pt-15to7000_TuneCUETP8M1_Flat_13TeV_pythia8/RunIIFall15DR76-25nsNoPURaw_magnetOn_76X_mcRun2_asymptotic_v12-v1/GEN-SIM-RAW",
                                  useParent=False, unitsPerJob=10, totalUnits=-1),  # has about 9M events, 2K evt/file
+                                 # useParent=False, unitsPerJob=3, totalUnits=0.3),  # has about 9M events, 2K evt/file. Use this for cmsRunCondor
 
     "QCDFlatFall15NoPURECO": Dataset(inputDataset="/QCD_Pt-15to7000_TuneCUETP8M1_Flat_13TeV_pythia8/RunIIFall15DR76-25nsNoPURaw_magnetOn_76X_mcRun2_asymptotic_v12-v1/AODSIM",
                                      useParent=True, unitsPerJob=1, totalUnits=-1),  # has about 9M events, 9K evt/file
