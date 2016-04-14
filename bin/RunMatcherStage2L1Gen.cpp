@@ -59,6 +59,10 @@ int regionEta(float eta) {
 
 double correction(float pt, float eta, double params[11][8]);
 
+bool sortByGenPt(const MatchedPair & lhs, const MatchedPair & rhs) { return lhs.refJet().Pt() > rhs.refJet().Pt(); };
+
+bool isCenJet(const MatchedPair & pair) { return fabs(pair.l1Jet().Eta()) < 3; };
+
 /**
  * @brief Matching L1 jets from L1UpgradeTree, to reference GenJets from L1ExtraTree.
  *
@@ -131,15 +135,16 @@ int main(int argc, char* argv[]) {
     // Quantities for L1 jets:
     float out_pt(-1.), out_eta(99.), out_phi(99.);
     int out_nL1(-1); // number of jets in the event,
-    int out_ind(-1); // index of this jet in the collection (ordered by descending pT)
+    int out_indL1(-1); // index of this jet in the collection (ordered by descending pT)
     outTree.Branch("pt", &out_pt, "pt/Float_t");
     outTree.Branch("eta", &out_eta, "eta/Float_t");
     outTree.Branch("phi", &out_phi, "phi/Float_t");
     outTree.Branch("nL1", &out_nL1, "nL1/Int_t");
-    outTree.Branch("indL1", &out_ind, "indL1/Int_t");
+    outTree.Branch("indL1", &out_indL1, "indL1/Int_t");
     // Quantities for reference jets (GenJet, etc):
     float out_ptRef(-1.), out_etaRef(99.), out_phiRef(99.);
-    int out_nRef(-1), out_indRef;
+    int out_nRef(-1); // number of jets in the event,
+    int out_indRef(-1); // index of this jet in the collection (ordered by descending pT)
     outTree.Branch("ptRef", &out_ptRef, "ptRef/Float_t");
     outTree.Branch("etaRef", &out_etaRef, "etaRef/Float_t");
     outTree.Branch("phiRef", &out_phiRef, "phiRef/Float_t");
@@ -222,20 +227,20 @@ int main(int argc, char* argv[]) {
         corr_lut = load_lut("stage2_lut_pu15to25_corr.txt");
     }
 
-    // double funcParams4[11][8] = {
-    //   { 2.08107691501,22.4129703515,5.46086027683,-150.888778124,18.3292242153,16968.6469599,0.0147496053457,-22.4089831889 },
-    //   { 2.04880080215,22.5083699943,10.2635352836,-466.890522023,32.5408463829,2429.03382746,0.0111274121697,-22.0890253377 },
-    //   { 2.03808638982,22.2127275989,13.7594864391,-761.860391454,39.9060363401,1019.30588542,0.00952105483129,-21.6814176696 },
-    //   { 2.05901166216,23.8125466978,14.119589176,-766.199501821,38.7767169666,1059.63374337,0.00952979125289,-21.6477483043 },
-    //   { 2.08021511285,22.265051562,14.0198255047,-769.175319944,38.687351315,1072.9785137,0.00951954709279,-21.6277409602 },
-    //   { 2.04623980351,19.6049149791,12.2578170485,-736.96846599,45.3225355911,848.976802835,0.00946235693865,-21.7970133915 },
-    //   { 1.77585386314,24.1202894336,10.1179757811,-697.422255848,55.9767511168,599.040770412,0.00930772659892,-21.9921521313 },
-    //   { 1.42460009989,1024,1,0,1,0,1,1 },
-    //   { 1.37157036457,1024,1,0,1,0,1,1 },
-    //   { 1.37830172245,1024,1,0,1,0,1,1 },
-    //   { 1.36123039014,1024,1,0,1,0,1,1 },
-    // };
-
+/*    double funcParams4[11][8] = {
+      { 2.08107691501,22.4129703515,5.46086027683,-150.888778124,18.3292242153,16968.6469599,0.0147496053457,-22.4089831889 },
+      { 2.04880080215,22.5083699943,10.2635352836,-466.890522023,32.5408463829,2429.03382746,0.0111274121697,-22.0890253377 },
+      { 2.03808638982,22.2127275989,13.7594864391,-761.860391454,39.9060363401,1019.30588542,0.00952105483129,-21.6814176696 },
+      { 2.05901166216,23.8125466978,14.119589176,-766.199501821,38.7767169666,1059.63374337,0.00952979125289,-21.6477483043 },
+      { 2.08021511285,22.265051562,14.0198255047,-769.175319944,38.687351315,1072.9785137,0.00951954709279,-21.6277409602 },
+      { 2.04623980351,19.6049149791,12.2578170485,-736.96846599,45.3225355911,848.976802835,0.00946235693865,-21.7970133915 },
+      { 1.77585386314,24.1202894336,10.1179757811,-697.422255848,55.9767511168,599.040770412,0.00930772659892,-21.9921521313 },
+      { 1.42460009989,1024,1,0,1,0,1,1 },
+      { 1.37157036457,1024,1,0,1,0,1,1 },
+      { 1.37830172245,1024,1,0,1,0,1,1 },
+      { 1.36123039014,1024,1,0,1,0,1,1 },
+    };*/
+/*
     double funcParams5[11][8] = {
       { 1.85654432772,29.1779814299,5.93738250047,-188.618421587,23.5055878881,15481.6853917,0.01545758831,-21.9321959989 },
       { 1.86683225196,28.5893940566,7.94415725192,-314.427488849,29.7352089394,6153.57607,0.0136091836255,-21.8490511405 },
@@ -248,7 +253,7 @@ int main(int argc, char* argv[]) {
       { 1.33685072327,1024,1,0,1,0,1,1 },
       { 1.27627349839,1024,1,0,1,0,1,1 },
       { 1.35003172007,1024,1,0,1,0,1,1 },
-    };
+    };*/
 
     //////////////////////
     // LOOP OVER EVENTS //
@@ -283,11 +288,13 @@ int main(int argc, char* argv[]) {
         /////////////////////////////////////////////
         std::vector<TLorentzVector> refJets = makeTLorentzVectors(refData->cenJetEt, refData->cenJetEta, refData->cenJetPhi);
         std::vector<TLorentzVector> l1Jets = makeTLorentzVectors(l1Data->jetEt, l1Data->jetEta, l1Data->jetPhi);
+
         // apply calibration
-        for (auto & itr: l1Jets) {
-            double corrEt = itr.Et() * correction(itr.Et(), itr.Eta(), funcParams4);
-            itr.SetPtEtaPhiM(corrEt, itr.Eta(), itr.Phi(), 0);
-        }
+        // for (auto & itr: l1Jets) {
+        //     // double corrEt = itr.Et() * correction(itr.Et(), itr.Eta(), funcParams4);
+        //     double corrEt = itr.Et() * correction(itr.Et(), itr.Eta(), funcParams5);
+        //     itr.SetPtEtaPhiM(corrEt, itr.Eta(), itr.Phi(), 0);
+        // }
 
         out_nL1 = l1Jets.size();
         out_nRef = refJets.size();
@@ -303,7 +310,7 @@ int main(int argc, char* argv[]) {
         out_httL1 = l1Data->sumEt[2];
         out_mhtL1 = l1Data->sumEt[3];
         out_mhtPhiL1 = l1Data->sumPhi[3];
-        float httL1_check = scalarSumPt(httL1Jets);
+        // float httL1_check = scalarSumPt(httL1Jets);
 
         // Check my calc with stored value
         // Doens't make sense to do this when applying calibrations on the fly
@@ -314,12 +321,12 @@ int main(int argc, char* argv[]) {
         //     }
         // }
 
-        TLorentzVector mhtL1_check = vectorSum(httL1Jets);
+        // TLorentzVector mhtL1_check = vectorSum(httL1Jets);
 
         // Override sums with calibrated jets
-        out_httL1 = httL1_check;
-        out_mhtL1 = mhtL1_check.Pt();
-        out_mhtPhiL1 = mhtL1_check.Phi();
+        // out_httL1 = httL1_check;
+        // out_mhtL1 = mhtL1_check.Pt();
+        // out_mhtPhiL1 = mhtL1_check.Phi();
 
         // Ref jet sums
         std::vector<TLorentzVector> httRefJets = getJetsForHTT(refJets);
@@ -342,6 +349,30 @@ int main(int argc, char* argv[]) {
         // store L1 & ref jet variables in tree //
         //////////////////////////////////////////
         out_nMatches = matchResults.size();
+
+        // split into cen and fwd
+        // std::vector<MatchedPair> cenMatchResults;
+        // std::copy_if(matchResults.begin(), matchResults.end(), std::back_inserter(cenMatchResults), isCenJet);
+
+        // sort by decreasing genjet pt
+        // std::sort(cenMatchResults.begin(), cenMatchResults.end(), sortByGenPt);
+        // if (cenMatchResults.size() == 0) continue;
+        // auto it = cenMatchResults.at(0);
+        // out_pt = it.l1Jet().Et();
+        // out_eta = it.l1Jet().Eta();
+        // out_phi = it.l1Jet().Phi();
+        // out_dr = it.refJet().DeltaR(it.l1Jet());
+        // out_deta = it.refJet().Eta() - it.l1Jet().Eta();
+        // out_dphi = it.refJet().DeltaPhi(it.l1Jet());
+        // out_ptRef = it.refJet().Pt();
+        // out_etaRef = it.refJet().Eta();
+        // out_phiRef = it.refJet().Phi();
+        // out_ptDiff = out_pt - out_ptRef;
+        // out_rsp = out_pt/out_ptRef;
+        // out_resL1 = out_ptDiff/out_pt;
+        // out_resRef = out_ptDiff/out_ptRef;
+        // outTree.Fill();
+
         for (const auto &it: matchResults) {
             // std::cout << it << std::endl;
             if (opts.correctionFilename() != "") {
