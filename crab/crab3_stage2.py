@@ -57,6 +57,7 @@ if __name__ == "__main__":
         config.Data.inputDataset = dset_opts.inputDataset
         config.Data.useParent = dset_opts.useParent
         config.Data.unitsPerJob = dset_opts.unitsPerJob
+        config.JobType.inputFiles = ['../data/Fall15_25nsV2_MC.db']
 
         # to restrict total units run over
         # comment it out to run over all
