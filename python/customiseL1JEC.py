@@ -18,8 +18,10 @@ To include L1JEC, i.e. if testing/validating calibrations, add to cmsDriver.py:
 
 def L1NtupleJEC_ON(process):
     """Setup L1Ntuples for L1JEC, with L1JEC applied."""
+    # TODD: how to ensure it's on in caloStage2Params?
+    # we dont want to change the calib mode if there is one specified, but
+    # what if there isn't?
     L1NtupleJEC(process)
-    L1JEC_on(process)
     return process
 
 
@@ -77,18 +79,18 @@ def L1NtupleJEC(process):
     process.l1UpgradeEmuTree.jetToken = cms.untracked.InputTag("simCaloStage2Digis", "MP")
 
     # Get rid of unnecessary Stage 1 modules
-    remove_modules = [
-        process.L1TRawToDigi,
-        process.siPixelDigis,
-        process.siStripDigis,
-        process.muonCSCDigis,
-        process.muonDTDigis,
-        process.muonRPCDigis,
-        process.castorDigis
-    ]
-    for mod in remove_modules:
-        if mod.label() in process.__dict__.keys():
-            result = process.RawToDigi.remove(mod)
+    # remove_modules = [
+    #     process.L1TRawToDigi,
+    #     process.siPixelDigis,
+    #     process.siStripDigis,
+    #     process.muonCSCDigis,
+    #     process.muonDTDigis,
+    #     process.muonRPCDigis,
+    #     process.castorDigis
+    # ]
+    # for mod in remove_modules:
+    #     if mod.label() in process.__dict__.keys():
+    #         result = process.RawToDigi.remove(mod)
 
     return process
 
@@ -96,10 +98,4 @@ def L1NtupleJEC(process):
 def L1JEC_off(process):
     """Turn Stage 2 JEC OFF"""
     process.caloStage2Params.jetCalibrationType = cms.string("None")
-    return process
-
-
-def L1JEC_on(process):
-    """Turn Stage 2 JEC ON"""
-    process.caloStage2Params.jetCalibrationType = cms.string("function6PtParams22EtaBins")
     return process
