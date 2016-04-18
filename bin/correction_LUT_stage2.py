@@ -1008,7 +1008,7 @@ def print_Stage2_lut_files(fit_functions,
         plot_corr_vs_pt(map_info, eta_ind, title, plot_dir)
         plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir)
         plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir)
-
+        plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir)
 
     # put them into a LUT
     write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
@@ -1182,6 +1182,43 @@ def plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir):
     plt.xscale('log')
     plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.pdf' % eta_ind))
 
+    plt.clf()
+
+
+def plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir):
+    """Plot function corrected pt vs LUT corrected pt
+
+    Parameters
+    ----------
+    map_info : dict
+        Holds np.ndarrays for various values
+    eta_ind : int
+        eta index for plot filename
+    title : str
+        Title to put on plot
+    plot_dir : str
+        Where to save the plot
+    """
+    plt.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x')
+    plt.xlabel('LUT corrected HW pT')
+    plt.ylabel('Function corrected HW pT')
+    plt.xlim(0, 1024)
+    plt.ylim(0, 1024)
+    plt.plot([0, 1024], [0, 1024])
+    plt.minorticks_on()
+    plt.grid(which='both')
+    plt.suptitle(title)
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.pdf' % eta_ind))
+
+    plt.xlim(0, 200)
+    plt.ylim(0, 200)
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_%d.pdf' % eta_ind))
+
+    plt.xlim(1, 200)
+    plt.ylim(1, 200)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_log_%d.pdf' % eta_ind))
     plt.clf()
 
 
