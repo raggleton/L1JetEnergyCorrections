@@ -359,7 +359,7 @@ def generate_address(iet_index, ieta_index):
     int
         Corresponding address.
     """
-    return (ieta_index<<4) + iet_index
+    return (ieta_index<<4) | iet_index
 
 
 def iet_to_index(iet, hw_pt_orig, pt_index):
