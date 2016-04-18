@@ -587,7 +587,7 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add
 def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
     """Convert addition and multiplication factors into one integer.
 
-    Note that to handle -ve addends, we need to do 2's complement.
+    Auto-handles -ve addends! (thanks Andy)
 
     Parameters
     ----------
@@ -605,12 +605,9 @@ def generate_add_mult(add, mult, num_add_bits, num_mult_bits):
     int
         Combined addend & multiplier.
     """
-    if add < 0:
-        # there must be a better way... have to do it this way to ensure it's
-        # num_add_bits long
-        add_str = format(abs(add), '0%db' % num_add_bits).translate(maketrans('01', '10'))
-        add = int(add_str, 2) + 1
-    return (add<<num_mult_bits) + mult
+    # andy = ( (add & 0x00FF) << num_mult_bits ) | (mult & 0x03FF)
+    me = ( (add & ((2**num_add_bits) - 1)) << num_mult_bits ) | (mult & ((2**num_mult_bits)-1))
+    return me
 
 
 def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info, num_add_bits, num_mult_bits):
