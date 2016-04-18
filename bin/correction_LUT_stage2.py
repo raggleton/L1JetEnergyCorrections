@@ -712,6 +712,8 @@ def write_stage2_addition_lut(lut_filename, mapping_info):
 
 def ieta_to_index(ieta):
     """Convert ieta to index"""
+    if ieta == 0:
+        return 0
     ieta = abs(ieta)
     if ieta <= 29:  # HBHE
         return int(ceil(ieta / 4.)) - 1
@@ -737,11 +739,12 @@ def write_eta_compress_lut(lut_filename, nbits_in):
         lut.write("# the header is first valid line starting with ")
         lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
         lut.write("#<header> v1 %d 4 </header>\n" % nbits_in)
+        lut.write("0 0\n")  # Dummy first word as this happens in FW
         for ieta in range(1, 42):
             line = "%d %d\n" % (ieta, ieta_to_index(ieta))
             lut.write(line)
         # padding extra bits we don't need
-        for ieta in range(42, (2**nbits_in) + 1):
+        for ieta in range(42, (2**nbits_in)):
             line = "%d 0\n" % (ieta)
             lut.write(line)
 
