@@ -41,8 +41,8 @@ if __name__ == "__main__":
     for dset in datasets:
         if dset not in samples.samples.keys():
             raise KeyError("Wrong dataset key name:", dset)
-        if not samples.check_dataset_exists(samples.samples[dset].inputDataset):
-            raise RuntimeError("Dataset cannot be found in DAS: %s" % samples.samples[dset].inputDataset)
+#        if not samples.check_dataset_exists(samples.samples[dset].inputDataset):
+#            raise RuntimeError("Dataset cannot be found in DAS: %s" % samples.samples[dset].inputDataset)
 
     for dset in datasets:
         dset_opts = samples.samples[dset]
