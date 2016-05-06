@@ -573,7 +573,7 @@ def plot_rsp_pt_hists(check_file, eta_min, eta_max, pt_bins, pt_var, oDir, oForm
     return filenames
 
 
-def plot_rsp_pt_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf'):
+def plot_rsp_pt_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf', x_range=None):
     """Plot a graph of response vs pt (L1) for a given eta bin"""
 
     grname = "eta_%g_%g/gr_rsp_pt_eta_%g_%g" % (eta_min, eta_max, eta_min, eta_max)
@@ -593,7 +593,7 @@ def plot_rsp_pt_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf'):
     mg.Add(graph)
     # leg.AddEntry(graph, plot_labels[i], "LP")
 
-    pt_min, pt_max = 0, 1022
+    pt_min, pt_max = (0, 1022) if not x_range else (x_range[0], x_range[1])
     # lines at 1, and +/- 0.1
     line_central = ROOT.TLine(pt_min, 1, pt_max, 1)
     line_plus = ROOT.TLine(pt_min, 1.1, pt_max, 1.1)
@@ -620,7 +620,7 @@ def plot_rsp_pt_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf'):
     c.SaveAs("%s/gr_rsp_pt_eta_%g_%g%s.%s" % (oDir, eta_min, eta_max, append, oFormat))
 
 
-def plot_rsp_ptRef_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf'):
+def plot_rsp_ptRef_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf', x_range=None):
     """Plot a graph of response vs pt (L1) for a given eta bin"""
 
     grname = "eta_%g_%g/gr_rsp_ptRef_eta_%g_%g" % (eta_min, eta_max, eta_min, eta_max)
@@ -639,7 +639,7 @@ def plot_rsp_ptRef_graph(check_file, eta_min, eta_max, oDir, oFormat='pdf'):
     mg.Add(graph)
     # leg.AddEntry(graph, plot_labels[i], "LP")
 
-    pt_min, pt_max = 0, 1022
+    pt_min, pt_max = (0, 1022) if not x_range else (x_range[0], x_range[1])
     # lines at 1, and +/- 0.1
     line_central = ROOT.TLine(pt_min, 1, pt_max, 1)
     line_plus = ROOT.TLine(pt_min, 1.1, pt_max, 1.1)
@@ -1054,8 +1054,8 @@ def main(in_args=sys.argv[1:]):
             plot_rsp_eta_exclusive_graph(check_file, eta_min, eta_max, binning.check_pt_bins, 'pt', args.oDir, args.format)
             plot_rsp_eta_exclusive_graph(check_file, eta_min, eta_max, binning.check_pt_bins, 'ptRef', args.oDir, args.format)
 
-            plot_rsp_pt_graph(check_file, eta_min, eta_max, args.oDir, args.format)
-            plot_rsp_ptRef_graph(check_file, eta_min, eta_max, args.oDir, args.format)
+            plot_rsp_pt_graph(check_file, eta_min, eta_max, args.oDir, args.format, x_range)
+            plot_rsp_ptRef_graph(check_file, eta_min, eta_max, args.oDir, args.format, x_range)
 
             for etamin, etamax in pairwise(etaBins):
                 if etamin < eta_min or etamax > eta_max:
