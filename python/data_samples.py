@@ -50,8 +50,14 @@ Dataset = namedtuple("Dataset", "inputDataset unitsPerJob totalUnits useParent")
 samples = {
 
     "SingleMuReReco_Run2015D": Dataset(inputDataset='/SingleMuon/Run2015D-16Dec2015-v1/AOD',
-                                       useParent=True, unitsPerJob=2, totalUnits=-1),
+                                       useParent=True, unitsPerJob=4, totalUnits=-1),
 
+    "ZeroBiasReReco_Run2015D_2": Dataset(inputDataset='/ZeroBias2/Run2015D-16Dec2015-v1/AOD', 
+                                       useParent=True, unitsPerJob=4, totalUnits=-1),
+    
+    "ZeroBiasReReco_Run2015D_1": Dataset(inputDataset='/ZeroBias1/Run2015D-16Dec2015-v1/AOD', 
+                                       useParent=True, unitsPerJob=4, totalUnits=-1),
+    
     "Express_Run2015B_50ns": Dataset(inputDataset='/ExpressPhysics/Run2015B-Express-v1/FEVT',
                                      useParent=False, unitsPerJob=15, totalUnits=-1),
 
