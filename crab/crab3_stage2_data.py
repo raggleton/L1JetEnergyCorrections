@@ -57,6 +57,7 @@ if __name__ == "__main__":
         config.Data.lumiMask = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_v2.txt'
         config.Data.splitting = 'LumiBased'
         config.JobType.inputFiles = ['../data/Fall15_25nsV2_DATA.db']
+        config.Data.useParent = dset_opts.useParent
 
         try:
             crabCommand('submit', config=config)
