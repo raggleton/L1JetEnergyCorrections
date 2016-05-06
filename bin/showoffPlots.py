@@ -479,7 +479,8 @@ def plot_rsp_Vs_pt_candle_violin(check_file, eta_min, eta_max, ptVar, oDir, oFor
     h2d_rsp_pt = h2d_rsp_pt_orig.Rebin2D(1, 1, "hnew")
 
     c = generate_canvas()
-    h2d_rsp_pt.SetTitle("%s: %g-%g;%s;%s" % (eta_l1_str, eta_min, eta_max, pt_ref_str, rsp_str))
+    ptStr = pt_l1_str if ptVar == 'l1' else pt_ref_str
+    h2d_rsp_pt.SetTitle("%s: %g-%g;%s;%s" % (eta_l1_str, eta_min, eta_max, ptStr, rsp_str))
     h2d_rsp_pt.Draw("CANDLE")
     # Draw fitted peaks as well
     gr_name = "eta_{0:g}_{1:g}/gr_rsp_{2}_eta_{0:g}_{1:g}".format(eta_min, eta_max, 'pt' if ptVar == 'l1' else 'ptRef')
