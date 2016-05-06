@@ -242,7 +242,7 @@ bool tightLepVetoCleaning(float eta,
     if (fabs(eta) <= 3) {
         if ((fabs(eta) <= 2.4) && !((chef > 0) && ((chMult+elMult+muMult) > 0) && (eef < 0.9)))
             return false;
-        return (nhef < 0.9) && (pef < 0.9) && ((chMult+nhMult+phMult+elMult+muMult) > 1) && (mef < 0.8) && (muMult == 0) && (elMult == 0);
+        return (nhef < 0.9) && (pef < 0.9) && ((chMult+nhMult+phMult+elMult+muMult) > 1) && (mef < 0.8) && (muMult == 0); // && (elMult == 0);
     } else {
         return (pef < 0.9 && (nhMult + phMult) > 10);
     }
