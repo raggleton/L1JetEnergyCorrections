@@ -9,6 +9,7 @@ Submit matcher jobs on HTCondor.
 Output files will be produced as follows: for ntuples in XXX/DATASET, individual
 pairs files will be in XXX/DATASET, whilst the hadded final file will be in
 XXX/pairs
+This is configureable via the `output_dir` arg of submit_matcher_dag()
 
 Requires the htcondenser package: https://github.com/raggleton/htcondenser
 
@@ -175,7 +176,10 @@ def submit_all_matcher_dags(exe, ntuple_dirs, log_dir, append,
     # Submit a DAG for each pairs file
     for ndir in ntuple_dirs:
         print '>>> Processing', ndir
-        sfile = submit_matcher_dag(exe=exe, ntuple_dir=ndir, log_dir=log_dir,
+        odir = os.path.join(os.path.dirname(ndir.rstrip('/')), 'pairs')
+        print '>>> Output files will go in:', odir
+        sfile = submit_matcher_dag(exe=exe, ntuple_dir=ndir,
+                                   output_dir=odir, log_dir=log_dir,
                                    l1_dir=l1_dir, ref_dir=ref_dir,
                                    deltaR=deltaR, ref_min_pt=ref_min_pt,
                                    cleaning_cut=cleaning_cut,
@@ -190,8 +194,8 @@ def submit_all_matcher_dags(exe, ntuple_dirs, log_dir, append,
         print 'DAGstatus.py ', ' '.join(status_files)
 
 
-
-def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_min_pt, cleaning_cut,
+def submit_matcher_dag(exe, ntuple_dir, output_dir, log_dir,
+                       l1_dir, ref_dir, deltaR, ref_min_pt, cleaning_cut,
                        append, force_submit):
     """Submit one matcher DAG for one directory of ntuples.
 
@@ -204,6 +208,9 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
 
     ntuple_dir : str
         Name of directory with L1Ntuples to run over.
+
+    output_dir : str
+        Name of directory where pairs files, etc should end up
 
     log_dir : str
         Directory for STDOUT/STDERR/LOG files. Should be on /storage.
@@ -228,6 +235,8 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
         already exists.
         Oherwise, program quits before submission.
     """
+    cc.check_create_dir(output_dir, info=True)
+
     # DAG for jobs
     stem = 'matcher_%s_%s' % (strftime("%H%M%S"), cc.rand_str(3))
     matcher_dag = ht.DAGMan(filename=os.path.join(log_dir, '%s.dag' % stem),
@@ -246,7 +255,7 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
                              cpus=1, memory='100MB', disk='100MB',
                              transfer_hdfs_input=False,
                              share_exe_setup=True,
-                             hdfs_store=ntuple_dir)
+                             hdfs_store=output_dir)
 
     # For creating filenames later
     fmt_dict = dict()
@@ -277,7 +286,8 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
                                          append.format(**fmt_dict))
         else:
             pairs_file = 'pairs_%s_%s.root' % (ntuple_name, append.format(**fmt_dict))
-        out_file = os.path.join(ntuple_dir, pairs_file)
+        out_file = os.path.join(output_dir, os.path.basename(ntuple_dir.rstrip('/')), pairs_file)
+        cc.check_create_dir(os.path.dirname(out_file))
         match_output_files.append(out_file)
 
         # Add matching job
@@ -301,9 +311,7 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
     # ---------------------------------------------------------------------
     final_file = 'pairs_%s_%s.root' % (os.path.basename(ntuple_dir.rstrip('/')),
                                        append.format(**fmt_dict))
-    final_dir = os.path.join(os.path.dirname(ntuple_dir.rstrip('/')), 'pairs')
-    cc.check_create_dir(final_dir, info=True)
-    final_file = os.path.join(final_dir, final_file)
+    final_file = os.path.join(output_dir, final_file)
     log.info("Final file: %s", final_file)
 
     # Check if any of the output files already exists - maybe we mucked up?
@@ -331,7 +339,7 @@ def submit_matcher_dag(exe, ntuple_dir, log_dir, l1_dir, ref_dir, deltaR, ref_mi
                         cpus=1, memory='100MB', disk='10MB',
                         transfer_hdfs_input=False,
                         share_exe_setup=False,
-                        hdfs_store=ntuple_dir)
+                        hdfs_store=output_dir)
 
     for i, job in enumerate(chain(matcher_jobs, hadd_jobs[:-1])):
         pairs_file = job.output_files[0]
