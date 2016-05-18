@@ -9,7 +9,9 @@ Submit matcher jobs on HTCondor.
 Output files will be produced as follows: for ntuples in XXX/DATASET, individual
 pairs files will be in XXX/DATASET, whilst the hadded final file will be in
 XXX/pairs
-This is configureable via the `output_dir` arg of submit_matcher_dag()
+You can override the output directory by explicitly setting OUTPUT_DIR,
+but only if you have 1 entry NTUPLE_DIR. OTherwise setting it to None gives
+you the default.
 
 Requires the htcondenser package: https://github.com/raggleton/htcondenser
 
@@ -121,6 +123,9 @@ if CLEANING_CUT:
 datestamp = strftime("%d_%b_%y")
 LOG_DIR = '/storage/%s/L1JEC/%s/L1JetEnergyCorrections/jobs/pairs/%s' % (os.environ['LOGNAME'], os.environ['CMSSW_VERSION'], datestamp)
 
+# Output directory for pairs files. If None, will auto choose
+OUTPUT_DIR = None
+
 
 def submit_all_matcher_dags(exe, ntuple_dirs, log_dir, append,
                             l1_dir, ref_dir, deltaR, ref_min_pt, cleaning_cut,
@@ -176,7 +181,13 @@ def submit_all_matcher_dags(exe, ntuple_dirs, log_dir, append,
     # Submit a DAG for each pairs file
     for ndir in ntuple_dirs:
         print '>>> Processing', ndir
-        odir = os.path.join(os.path.dirname(ndir.rstrip('/')), 'pairs')
+        if OUTPUT_DIR:
+            if len(ntuple_dirs) == 1:
+                odir = OUTPUT_DIR
+            else:
+                raise RuntimeError('You cannot specify OUTPUT_DIR and have >1 entry in NTUPLE_DIRS')
+        else:
+            odir = os.path.join(os.path.dirname(ndir.rstrip('/')), 'pairs')
         print '>>> Output files will go in:', odir
         sfile = submit_matcher_dag(exe=exe, ntuple_dir=ndir,
                                    output_dir=odir, log_dir=log_dir,
