@@ -181,7 +181,7 @@ def submit_runCalib_dag(pairs_file, log_dir, append, pu_bins, eta_bins, common_i
         log_stem = 'runCalib.$(cluster).$(process)'
         runCalib_jobs = ht.JobSet(exe='python',
                                   copy_exe=False,
-                                  filename='submit_runCalib.condor',
+                                  filename=os.path.join(log_dir, 'submit_runCalib.condor'),
                                   setup_script='worker_setup.sh',
                                   share_exe_setup=True,
                                   out_dir=log_dir, out_file=log_stem + '.out',
@@ -224,7 +224,7 @@ def submit_runCalib_dag(pairs_file, log_dir, append, pu_bins, eta_bins, common_i
         hadd_jobs = ht.JobSet(exe='hadd',
                               copy_exe=False,
                               share_exe_setup=True,
-                              filename='haddSmall.condor',
+                              filename=os.path.join(log_dir, 'haddSmall.condor'),
                               setup_script="cmssw_setup.sh",
                               out_dir=log_dir, out_file=log_stem + '.out',
                               err_dir=log_dir, err_file=log_stem + '.err',
