@@ -158,9 +158,9 @@ def make_comparisons():
     s2_mc_withJEC = '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/check/'
     f_PU0to10_check_mc_withJEC = os.path.join(s2_mc_withJEC, 'check_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC_PU0to10_maxPt1022.root')
     f_PU15to25_check_mc_withJEC = os.path.join(s2_mc_withJEC, 'check_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC_PU15to25_maxPt1022.root')
-    mc_PU0to10_label = 'MC QCD Spring15, with L1JEC (PU 0-10)'
+    mc_PU0to10_label = 'MC QCD Fall15, with L1JEC (PU 0-10)'
     mc_PU0to10_colour = ROOT.kBlue
-    mc_PU15to25_label = 'MC QCD Spring15, with L1JEC (PU 15-25)'
+    mc_PU15to25_label = 'MC QCD Fall15, with L1JEC (PU 15-25)'
     mc_PU15to25_colour = ROOT.kRed
 
     s2_data_run273301 = '/hdfs/L1JEC/L1JetEnergyCorrections/crab_Collision2016-RECO-l1t-integration-v53p1-CMSSW-807__273301_SingleMuon/check/'
@@ -170,10 +170,14 @@ def make_comparisons():
 
     oDir = '/users/ra12451/L1JEC/integration/CMSSW_8_0_7/src/L1Trigger/L1JetEnergyCorrections/crab_Collision2016-RECO-l1t-integration-v53p1-CMSSW-807__273301_SingleMuon/check/data_mc_cleanTightLepVeto'
 
-    for eta_min, eta_max in pairwise(binning.eta_bins):
-        for pt_bin in binning.check_pt_bins:
-            pt_lo, pt_hi = pt_bin
-            for pt_var in ['pt', 'ptRef']:
+    for pt_var in ['pt', 'ptRef']:
+        filelist_30_40 = []
+        filelist_60_80 = []
+        filelist_100_300 = []
+        for eta_min, eta_max in pairwise(binning.eta_bins):
+            filename_list = []
+            for pt_bin in binning.check_pt_bins:
+                pt_lo, pt_hi = pt_bin
                 hist_name = 'eta_0_3/Histograms/hrsp_eta_%g_%g_%s_%d_%d' % (eta_min, eta_max, pt_var, pt_lo, pt_hi)
                 hists = [
                     Contribution(file_name=f_check_data_run273301_SingleMu_clean, obj_name=hist_name, label=data_label, line_color=data_color, marker_color=data_color),
@@ -183,12 +187,35 @@ def make_comparisons():
                 pt_str = 'p_{T}^{L1}' if pt_var == 'pt' else 'p_{T}^{Ref}'
                 title = 'Data vs MC, %g < #eta^{L1} < %g, %d < %s < %d' % (eta_min, eta_max, pt_lo, pt_str, pt_hi)
                 p = Plot(contributions=hists,
-                         xtitle="Response (L1/PF)", ytitle="AU",
+                         xtitle="Response (L1/REF)", ytitle="AU",
                          title=title, normalise=True, xlim=[0,4])
                 p.legend.SetX1(0.45)
                 p.legend.SetY1(0.6)
                 if p.plot('HISTE NOSTACK'):
-                    p.save(os.path.join(oDir, 'compare_eta_%g_%g_%s_%d_%d.pdf' % (eta_min, eta_max, pt_var, pt_lo, pt_hi)))
+                    filename = 'compare_eta_%g_%g_%s_%d_%d.png' % (eta_min, eta_max, pt_var, pt_lo, pt_hi)
+                    p.save(os.path.join(oDir, filename))
+                    filename_list.append(filename)
+                    if pt_lo == 30:
+                        filelist_30_40.append(filename)
+                    if pt_lo == 60:
+                        filelist_60_80.append(filename)
+                    if pt_lo == 100:
+                        filelist_100_300.append(filename)
+
+            write_gif_list_file(filename_list, os.path.join(oDir, 'list_eta_%g_%g_%s.txt' % (eta_min, eta_max, pt_var)))
+
+        write_gif_list_file(filelist_30_40, os.path.join(oDir, 'list_%s_30_40.txt' % (pt_var)))
+        write_gif_list_file(filelist_60_80, os.path.join(oDir, 'list_%s_60_80.txt' % (pt_var)))
+        write_gif_list_file(filelist_100_300, os.path.join(oDir, 'list_%s_100_300.txt' % (pt_var)))
+
+
+def write_gif_list_file(list_of_files, output_filename):
+    if len(list_of_files) == 0:
+        return
+    with open(output_filename, 'w') as f:
+        for entry in list_of_files:
+            f.write("%s\n" % entry)
+
 
 if __name__ == "__main__":
     make_comparisons()
