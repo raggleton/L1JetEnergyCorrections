@@ -121,6 +121,7 @@ class Contribution(object):
         self.obj.SetMarkerSize(self.marker_size)
         self.obj.SetMarkerColor(self.marker_color)
         self.obj.SetMarkerStyle(self.marker_style)
+        self.obj.SetDirectory(0)
         input_file.Close()
         return self.obj
 
