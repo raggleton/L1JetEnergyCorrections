@@ -293,10 +293,10 @@ def submit_matcher_dag(exe, ntuple_dir, output_dir, log_dir,
         # handle anything up to first underscore (L1Tree, L1Ntuple, ...)
         result = re.match(r'^[a-zA-Z0-9]*_', ntuple_name)
         if result:
-            pairs_file = '%s_%s.root' % (ntuple_name.replace(result.group(), 'pairs_'),
-                                         append.format(**fmt_dict))
+            pairs_file = '%s_%s_%s.root' % (ntuple_name.replace(result.group(), 'pairs_'),
+                                         append.format(**fmt_dict), cc.rand_str(5))
         else:
-            pairs_file = 'pairs_%s_%s.root' % (ntuple_name, append.format(**fmt_dict))
+            pairs_file = 'pairs_%s_%s_%s.root' % (ntuple_name, append.format(**fmt_dict), cc.rand_str(5))
         out_file = os.path.join(output_dir, os.path.basename(ntuple_dir.rstrip('/')), pairs_file)
         cc.check_create_dir(os.path.dirname(out_file))
         match_output_files.append(out_file)
