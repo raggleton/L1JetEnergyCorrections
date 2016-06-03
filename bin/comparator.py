@@ -121,7 +121,8 @@ class Contribution(object):
         self.obj.SetMarkerSize(self.marker_size)
         self.obj.SetMarkerColor(self.marker_color)
         self.obj.SetMarkerStyle(self.marker_style)
-        self.obj.SetDirectory(0)
+        if isinstance(self.obj, ROOT.TH1):
+            self.obj.SetDirectory(0)
         input_file.Close()
         return self.obj
 
@@ -198,7 +199,7 @@ class Plot(object):
             try:
                 obj = c.get_obj().Clone()
             except IOError:
-                print "Couldn't get", c.obj_name
+                print "Couldn't get", c.obj_name, 'from', c.file_name
                 continue
 
             if self.plot_what == "graph":
