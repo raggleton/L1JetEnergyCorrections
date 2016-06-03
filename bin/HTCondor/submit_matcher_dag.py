@@ -89,13 +89,16 @@ PT_REF_MIN = 10
 # TDirectory name for the L1 jets
 L1_DIR = 'l1UpgradeEmuTree'
 if SAMPLE.startswith('MC') and '_PF_' in SAMPLE:
-        L1_DIR = 'l1JetRecoTree'  # for PF vs Gen
+    L1_DIR = 'l1JetRecoTree'  # for PF vs Gen
+elif SAMPLE == "DATA":
+    L1_DIR = 'l1UpgradeTree'
 
 # TDirectory name for the reference jets
 REF_DIR = 'l1JetRecoTree'
 if SAMPLE.startswith('MC'):
     if SAMPLE.endswith('Gen'):
-        REF_DIR = 'l1ExtraTreeGenAk4'
+        # REF_DIR = 'l1ExtraTreeGenAk4'
+        REF_DIR = 'l1GeneratorTree'
     elif SAMPLE.endswith('PF'):
         REF_DIR = 'l1JetRecoTree'
     else:
