@@ -94,6 +94,74 @@ def complete_pt_mapping(compressed_map, hw_pt):
     return full_map
 
 
+def do_pt_compression(fit_functions, pt_orig, target_num_pt_bins,
+                      merge_algorithm, merge_criterion):
+    """Mega function to figure out the optimal PT compression scheme using the correction curves
+
+    Parameters
+    ----------
+    fit_functions : list[TF1] or list[MultiFunc]
+        List of correction functions, one per compressed eta bin
+    pt_orig : numpy.array
+        Array of physical PT values to consider for compression
+    target_num_pt_bins : int
+        NUmber of bins to compress PT range into
+    merge_algorithm : str
+        "greedy" or "kmeans"
+    merge_criterion : float
+        For greedy algorithm, specifies maximum size of a bin
+
+    Returns
+    -------
+    new_pt_mapping : OrderedDict{int : int}
+        Mapping between original HW PT and some compressed PT
+
+    pt_index : list[int]
+        Index of integers to assign a given HW PT to a compression bin.
+    """
+    # decide which fit func to use for binning based on which has the curve start at the lowest pT
+    eta_ind_lowest = determine_lowest_curve_start(fit_functions)
+
+    # find min of curve and merge above that
+    merge_above = fit_functions[eta_ind_lowest].functions_dict.values()[1].GetMinimumX()
+    print 'Merge above', merge_above
+
+    # find end of plateau and merge below that
+    merge_below = fit_functions[eta_ind_lowest].functions_dict.keys()[0][1]
+    print 'Merge below', merge_below
+
+    # do 0 separately as it should have 0 correction factor
+    corr_orig = np.array([0.] + [fit_functions[eta_ind_lowest].Eval(pt)
+                                 for pt in pt_orig if pt > 0])
+
+    with open('corr_dump.txt', 'w') as dump:
+        dump.write(','.join(((str(x) for x in corr_orig))))
+
+    # Find the optimal compressed pt binning
+    if merge_algorithm == 'greedy':
+        new_pt_mapping = calc_compressed_pt_mapping_greedy(pt_orig, corr_orig,
+                                                    target_num_pt_bins,
+                                                    merge_criterion,
+                                                    merge_above, merge_below)
+    elif merge_algorithm == 'kmeans':
+        new_pt_mapping = calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig,
+                                                           target_num_pt_bins,
+                                                           merge_above, merge_below)
+    else:
+        raise RuntimeError('merge_algorithm argument incorrect')
+
+    hw_pt_compressed = (np.array(new_pt_mapping.values()) * 2).astype(int)
+    # figure out pt unique indices for each pt
+    pt_index = np.array(assign_pt_index(hw_pt_compressed))
+
+    pt_index_list = list(pt_index)
+    bin_edges = [pt_orig[pt_index_list.index(i)] for i in xrange(0, target_num_pt_bins)]
+    print 'Compressed bin edges (physical pT in GeV):'
+    print ', '.join(str(i) for i in bin_edges)
+
+    return new_pt_mapping, pt_index
+
+
 def calc_compressed_pt_mapping_greedy(pt_orig, corr_orig, target_num_bins,
                                       merge_criterion, merge_above=None, merge_below=None):
     """Calculate new compressed pt mapping. Uses corrections
@@ -984,48 +1052,11 @@ def print_Stage2_lut_files(fit_functions,
         new_pt_mapping = complete_pt_mapping(pt_lut_contents, hw_pt_orig)
         pt_index = new_pt_mapping.values()
     else:
-        # Do the PT compression
-        # decide which fit func to use for binning based on which has the curve start at the lowest pT
-        eta_ind_lowest = determine_lowest_curve_start(fit_functions)
+        # Figure out the PT compression & make LUT
+        new_pt_mapping, pt_index = do_pt_compression(fit_functions, pt_orig,
+                                                     target_num_pt_bins, merge_algorithm,
+                                                     merge_criterion)
 
-        # find min of curve and merge above that
-        merge_above = fit_functions[eta_ind_lowest].functions_dict.values()[1].GetMinimumX()
-        print 'Merge above', merge_above
-
-        # find end of plateau and merge below that
-        merge_below = fit_functions[eta_ind_lowest].functions_dict.keys()[0][1]
-        print 'Merge below', merge_below
-
-        # do 0 separately as it should have 0 correction factor
-        corr_orig = np.array([0.] + [fit_functions[eta_ind_lowest].Eval(pt)
-                                     for pt in pt_orig if pt > 0])
-
-        with open('corr_dump.txt', 'w') as dump:
-            dump.write(','.join(((str(x) for x in corr_orig))))
-
-        # Find the optimal compressed pt binning
-        if merge_algorithm == 'greedy':
-            new_pt_mapping = calc_compressed_pt_mapping_greedy(pt_orig, corr_orig,
-                                                        target_num_pt_bins,
-                                                        merge_criterion,
-                                                        merge_above, merge_below)
-        elif merge_algorithm == 'kmeans':
-            new_pt_mapping = calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig,
-                                                               target_num_pt_bins,
-                                                               merge_above, merge_below)
-        else:
-            raise RuntimeError('merge_algorithm argument incorrect')
-
-        pt_compressed = np.array(new_pt_mapping.values())
-        hw_pt_compressed = (pt_compressed * 2).astype(int)
-        # figure out pt unique indices for each pt
-        pt_index = np.array(assign_pt_index(hw_pt_compressed))
-        pt_index_list = list(pt_index)
-        bin_edges = [pt_orig[pt_index_list.index(i)] for i in xrange(0, target_num_pt_bins)]
-        print 'Compressed bin edges (physical pT in GeV):'
-        print ', '.join(str(i) for i in bin_edges)
-
-        # make a lut to convert original pt (address) to compressed (index)
         write_pt_compress_lut(pt_lut_filename, hw_pt_orig, pt_index)
 
     # to store {eta_index: {various pt/correction mappings}} for all eta bins
@@ -1039,15 +1070,11 @@ def print_Stage2_lut_files(fit_functions,
 
     # figure out new correction mappings for each eta bin
     for eta_ind, func in enumerate(fit_functions):
-        # if eta_ind>0:
-        #     break
         print ' *** Doing eta bin', eta_ind, '***'
 
         # Dict to hold ALL info for this eta bin
         map_info = dict(pt_orig=pt_orig,  # original phys pt values
                         hw_pt_orig=hw_pt_orig,  # original HW pt values
-                        # pt_compressed=pt_compressed,  # phys pt values after compression
-                        # hw_pt_compressed=hw_pt_compressed,  # HW pt values after compression
                         pt_index=pt_index,  # index for compressed pt
                         corr_orig=None,  # original correction factors (phys)
                         corr_compressed=None,  # correction factors after pt compression (phys)
