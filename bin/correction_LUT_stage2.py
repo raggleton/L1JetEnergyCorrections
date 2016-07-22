@@ -94,10 +94,10 @@ def complete_pt_mapping(compressed_map, hw_pt):
     return full_map
 
 
-def calc_compressed_pt_mapping(pt_orig, corr_orig, target_num_bins,
-                               merge_criterion, merge_above=None, merge_below=None):
+def calc_compressed_pt_mapping_greedy(pt_orig, corr_orig, target_num_bins,
+                                      merge_criterion, merge_above=None, merge_below=None):
     """Calculate new compressed pt mapping. Uses corrections
-    to decide how to merge bins.
+    to decide how to merge bins via "greedy" method.
 
     Returns a dicts for original:quantised pt mapping, where the quantised pT
     is the centre of the pT bin (for lack of anything better)
@@ -1005,7 +1005,7 @@ def print_Stage2_lut_files(fit_functions,
 
         # Find the optimal compressed pt binning
         if merge_algorithm == 'greedy':
-            new_pt_mapping = calc_compressed_pt_mapping(pt_orig, corr_orig,
+            new_pt_mapping = calc_compressed_pt_mapping_greedy(pt_orig, corr_orig,
                                                         target_num_pt_bins,
                                                         merge_criterion,
                                                         merge_above, merge_below)
@@ -1041,6 +1041,7 @@ def print_Stage2_lut_files(fit_functions,
     for eta_ind, func in enumerate(fit_functions):
         # if eta_ind>0:
         #     break
+        print ' *** Doing eta bin', eta_ind, '***'
 
         # Dict to hold ALL info for this eta bin
         map_info = dict(pt_orig=pt_orig,  # original phys pt values
@@ -1058,8 +1059,6 @@ def print_Stage2_lut_files(fit_functions,
                         hw_pt_post_hw_corr_compressed=None,  # HW pt post HW correction factor
                         pt_post_hw_corr_compressed=None  # phys pt post HW correction factor
                         )
-
-        print 'Calculating compressed correction value for eta bin', eta_ind
 
         corr_orig = np.array([0.] + [func.Eval(pt) for pt in pt_orig if pt > 0.])
         map_info['corr_orig'] = corr_orig
