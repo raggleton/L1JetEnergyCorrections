@@ -26,7 +26,6 @@ from multifunc import MultiFunc
 import matplotlib.pyplot as plt
 from binning import pairwise
 from itertools import izip, ifilterfalse
-from math import ceil
 
 USE_SKLEARN = True
 try:
@@ -140,9 +139,9 @@ def do_pt_compression(fit_functions, pt_orig, target_num_pt_bins,
     # Find the optimal compressed pt binning
     if merge_algorithm == 'greedy':
         new_pt_mapping = calc_compressed_pt_mapping_greedy(pt_orig, corr_orig,
-                                                    target_num_pt_bins,
-                                                    merge_criterion,
-                                                    merge_above, merge_below)
+                                                           target_num_pt_bins,
+                                                           merge_criterion,
+                                                           merge_above, merge_below)
     elif merge_algorithm == 'kmeans':
         new_pt_mapping = calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig,
                                                            target_num_pt_bins,
@@ -257,7 +256,7 @@ def calc_compressed_pt_mapping_greedy(pt_orig, corr_orig, target_num_bins,
             # Because we select bits 1:9, we can only distinguish
             # between even HW pT i.e. 1 GeV LSB
             # E.g. 0010 and 0011 are both treated the same.
-            # So skip to next pT if this one is XXX.5 GeV
+            # So skip to next pT if this one is X.5 GeV
             if not pt_orig[start_ind].is_integer():
                 start_ind += 1
                 continue
@@ -268,8 +267,8 @@ def calc_compressed_pt_mapping_greedy(pt_orig, corr_orig, target_num_bins,
 
                 # since the merge is greedy, but we want to use all our possible bins,
                 # we have to modify the last group to not go over our target number
-                if (end_ind < len(pt_orig) - 1 and
-                    target_num_bins > (len_pt_bins - len(corrs))):
+                if (end_ind < len(pt_orig) - 1
+                    and target_num_bins > (len_pt_bins - len(corrs))):
 
                     start_ind += target_num_bins - (len_pt_bins - len(corrs)) - 1
                     corrs = corr_orig[start_ind:end_ind + 1]
