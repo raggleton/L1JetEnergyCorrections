@@ -119,11 +119,11 @@ def get_functions_params_textfile(text_filename):
             all_fit_params.append(row)
             low_plateau = row[7]
             low_plateau_end = row[8]
-            low_plateau_fn = ROOT.TF1("lower_%d" % ind, "%f" % low_plateau)
+            low_plateau_fn = ROOT.TF1("lower_%d" % ind, "%f" % low_plateau, 0, low_plateau_end)
 
             high_plateau = row[9]
             high_plateau_start = row[10]
-            high_plateau_fn = ROOT.TF1("higher_%d" % ind, "%f" % high_plateau)
+            high_plateau_fn = ROOT.TF1("higher_%d" % ind, "%f" % high_plateau, high_plateau_start, 1024)
 
             main_fn = ROOT.TF1("fitfcn_%d" % ind, "[0]+[1]*TMath::Erf([2]*(log10(x)-[3])+[4]*exp([5]*(log10(x)-[6])*(log10(x)-[6])))")
             main_fn.SetRange(low_plateau_end, high_plateau_start)
@@ -132,7 +132,7 @@ def get_functions_params_textfile(text_filename):
             fn = MultiFunc({
                 (0, low_plateau_end): low_plateau_fn,
                 (low_plateau_end, high_plateau_start): main_fn,
-                (high_plateau_start, np.inf): high_plateau_fn
+                (high_plateau_start, 1024): high_plateau_fn
             })
             all_fits.append(fn)
 
@@ -424,9 +424,9 @@ def do_fancy_fit(fit, graph, condition=0.1, look_ahead=4):
 
 def plot_all_functions(functions, filename, eta_bins, et_min=0, et_max=30):
     """Draw all corrections functions on one big canvas"""
-    canv = ROOT.TCanvas("canv", "", 3800, 1200)
-    nrows = 2
-    ncols = ((len(binning.eta_bins) - 1) / nrows) + 1
+    nrows = 4
+    ncols = ((len(binning.eta_bins) - 1) / nrows)
+    canv = ROOT.TCanvas("canv", "", 800 * ncols, 800 * nrows)
     canv.Divide(ncols, nrows)
 
     # vertical line to intersect graph at a certain pT
@@ -444,19 +444,19 @@ def plot_all_functions(functions, filename, eta_bins, et_min=0, et_max=30):
             continue
         if isinstance(fit_func, ROOT.TF1):
             fit_func.SetRange(et_min, et_max)
-            fit_func.SetTitle("%g - %g" % (eta_bins[i], eta_bins[i + 1]))
+        fit_func.SetTitle("%g - %g" % (eta_bins[i], eta_bins[i + 1]))
         fit_func.SetLineWidth(1)
-        fit_func.Draw()
-        corr_5 = fit_func.Eval(5)
-        vert_line.SetY1(-15)
-        vert_line.SetY2(15)
+        fit_func.Draw(draw_range=[et_min, et_max])
+        # corr_5 = fit_func.Eval(5)
+        # vert_line.SetY1(-15)
+        # vert_line.SetY2(15)
+        # vert_line.Draw()
+        # l2 = hori_line.Clone()
+        # l2.SetY1(corr_5)
+        # l2.SetY2(corr_5)
+        # l2.Draw("SAME")
         ROOT.gPad.SetTicks(1, 1)
         ROOT.gPad.SetGrid(1, 1)
-        vert_line.Draw()
-        l2 = hori_line.Clone()
-        l2.SetY1(corr_5)
-        l2.SetY2(corr_5)
-        l2.Draw("SAME")
 
     canv.SaveAs(filename)
 
@@ -541,7 +541,7 @@ def main(in_args=sys.argv[1:]):
                     plot_graph_function(i, gr, total_fit, plot_file)
                 plot_all_graph_functions(all_graphs, fits, os.path.join(out_dir, "fancyfit_all.pdf"))
                 plot_all_graph_functions(all_graphs, None, os.path.join(out_dir, "fancyfit_all_gr.pdf"))
-            plot_all_graph_functions(None, fits, os.path.join(out_dir, "fancyfit_all_fn.pdf"))
+                plot_all_graph_functions(None, fits, os.path.join(out_dir, "fancyfit_all_fn.pdf"))
 
         if args.stage2:
             lut_base, ext = os.path.splitext(args.lut)
