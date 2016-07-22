@@ -27,7 +27,6 @@ import matplotlib.pyplot as plt
 from binning import pairwise
 from itertools import izip, ifilterfalse
 from math import ceil
-from string import maketrans
 
 USE_SKLEARN = True
 try:
@@ -707,19 +706,71 @@ def write_stage2_addition_lut(lut_filename, mapping_info):
                     last_ind = pt_ind
 
 
-def ieta_to_index(ieta):
-    """Convert ieta to index"""
+def calo_ieta_to_mp_ieta(ieta):
+    """Convert CALO ieta to MP ieta, due to the fact there
+    is no calo ieta 29 in the MP"""
+    sign = np.sign(ieta)
+    if abs(ieta) <= 29:
+        return ieta
+    if abs(ieta) > 29:
+        return (abs(ieta) - 1) * sign
+
+
+def mp_ieta_to_calo_ieta(ieta):
+    """Convert MP ieta to CALO ieta, to take into account ieta 29 issue"""
+    sign = np.sign(ieta)
+    if abs(ieta) < 29:
+        return ieta
+    if abs(ieta) >= 29:
+        return (abs(ieta) + 1) * sign
+
+
+def calo_ieta_to_index(ieta):
+    """Convert CALO ieta to compressed index
+
+    MUST be updated whenever (if) you change the eta compression
+    """
     if ieta == 0:
         return 0
+    if ieta > 41:
+        raise IndexError("You cannot have ieta > 41!")
     ieta = abs(ieta)
-    if ieta <= 29:  # HBHE
-        return int(ceil(ieta / 4.)) - 1
-    else:  # HF
-        return int(ceil((ieta - 29) / 3.)) + 6
+    # The old "region binning":
+    # if ieta <= 29:  # HBHE
+    #     return int(ceil(ieta / 4.)) - 1
+    # else:  # HF
+    #     return int(ceil((ieta - 29) / 3.)) + 6
+
+    # Joe's new binning:
+    ieta_bins = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9],
+        [10, 11, 12, 13],
+        [14, 15],
+        [16, 17],
+        [18, 19],
+        [20, 21],
+        [22],
+        [23],
+        [24],
+        [25],
+        [26],
+        [27, 28, 29],
+        [30, 31, 32],
+        [33, 34, 35, 36],
+        [37, 38, 39, 40, 41]
+    ]
+    for ind, ieta_bin in enumerate(ieta_bins, 1):
+        if ieta in ieta_bin:
+            return ind
+    raise IndexError("Cannot find your ieta %d"  % ieta)
 
 
 def write_eta_compress_lut(lut_filename, nbits_in):
-    """Write LUT that converts ieta to eta index.
+    """Write LUT that converts MP ieta to eta index.
+
+    Note that because the MP doesn't "know" about ieta 29,
+    we need to convert it
 
     Parameters
     ----------
@@ -730,19 +781,23 @@ def write_eta_compress_lut(lut_filename, nbits_in):
     """
     print "Making eta compression LUT"
     with open(lut_filename, 'w') as lut:
-        lut.write("# ieta compression LUT\n")
-        lut.write("# Converts abs(ieta) (%d bits) into 4 bit index\n" % nbits_in)
+        lut.write("# MP ieta compression LUT\n")
+        lut.write("# Converts abs(MP ieta) (%d bits) into 4 bit index\n" % nbits_in)
+        lut.write("# This is NOT calo ieta\n")
         lut.write("# anything after # is ignored with the exception of the header\n")
         lut.write("# the header is first valid line starting with ")
         lut.write("#<header> versionStr nrBitsAddress nrBitsData </header>\n")
         lut.write("#<header> v1 %d 4 </header>\n" % nbits_in)
         lut.write("0 0\n")  # Dummy first word as this happens in FW
-        for ieta in range(1, 42):
-            line = "%d %d\n" % (ieta, ieta_to_index(ieta))
+        end = 41
+        for mp_ieta in range(1, end):
+            index = calo_ieta_to_index(mp_ieta_to_calo_ieta(mp_ieta))
+            line = "%d %d\n" % (mp_ieta, index)
             lut.write(line)
+
         # padding extra bits we don't need
-        for ieta in range(42, (2**nbits_in)):
-            line = "%d 0\n" % (ieta)
+        for mp_ieta in range(end, (2**nbits_in)):
+            line = "%d 0\n" % (mp_ieta)
             lut.write(line)
 
 
