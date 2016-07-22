@@ -401,40 +401,6 @@ def calc_compressed_pt_mapping_kmeans(pt_orig, corr_orig, target_num_bins,
     return new_pt_mapping
 
 
-def calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping):
-    """Calculate new corrections using new compressed pT mapping
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-    OrderedDict
-        Map of {pt: new correction}
-    """
-    if len(pt_orig) != len(corr_orig):
-        raise IndexError('Different lengths for pt_orig, corr_orig')
-    # hold correction mapping
-    new_corr_mapping = {p: c for p, c in zip(pt_orig, corr_orig)}
-    new_corr_mapping = OrderedDict(sorted(new_corr_mapping.items(), key=lambda t: t))
-
-    # Get indices of locations of new pt bins
-    compr_pt = list(new_pt_mapping.values())
-    unique_pt = unique_everseen(compr_pt)
-    indices = [compr_pt.index(upt) for upt in unique_pt] + [len(corr_orig)]
-
-    # Need to calculate new mean correction for each pt bin
-    for i_low, i_high in pairwise(indices):
-        mean_corr = corr_orig[i_low:i_high].mean()
-        for j in xrange(i_low, i_high):
-            new_corr_mapping[pt_orig[j]] = mean_corr
-
-    # manually override
-    new_corr_mapping[0] = 0.
-    new_corr_mapping[0.5] = 0.
-    return new_corr_mapping
-
-
 def generate_address(iet_index, ieta_index):
     """Convert iEt, iEta indices to address. These are NOT HW values.
 
@@ -625,14 +591,16 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add
     print 'Assigning HW correction factors'
 
     hw_corrections, hw_additions = [], []
-    corr_comp = list(map_info['corr_compressed'])
-    corr_comp_unique = unique_everseen(corr_comp)
-    corr_comp_unique_inds = [corr_comp.index(x) for x in corr_comp_unique] + [len(corr_comp)]
-    print corr_comp_unique_inds
 
     hw_pt_orig = map_info['hw_pt_orig']
     hw_pt_post = map_info['hw_pt_post_corr_orig']
-    for lo, hi in pairwise(corr_comp_unique_inds):
+
+    # Figure out indices ofr the start & end of each compressed pt bin
+    pt_indices = list(map_info['pt_index'])
+    unique_inds = [pt_indices.index(x) for x in sorted(set(map_info['pt_index']))] + [len(pt_indices)]
+
+
+    for lo, hi in pairwise(unique_inds):
         print '-----'
         # average correction factor for this bin i.e. gradient
         corr_factor = (hw_pt_post[hi-1] - hw_pt_post[lo]) / (1.* hw_pt_orig[hi-1] - hw_pt_orig[lo])
@@ -1077,12 +1045,9 @@ def print_Stage2_lut_files(fit_functions,
                         hw_pt_orig=hw_pt_orig,  # original HW pt values
                         pt_index=pt_index,  # index for compressed pt
                         corr_orig=None,  # original correction factors (phys)
-                        corr_compressed=None,  # correction factors after pt compression (phys)
                         hw_corr_compressed=None,  # HW correction mult factor after pt compression
                         hw_corr_compressed_add=None,  # HW correction add factor after pt compression
                         pt_post_corr_orig=None,  # phys pt post original corrections
-                        pt_post_corr_compressed=None,  # phys pt post compressed corrections
-                        hw_pt_post_corr_compressed=None,  # hw pt post compressed corrections
                         hw_pt_post_hw_corr_compressed=None,  # HW pt post HW correction factor
                         pt_post_hw_corr_compressed=None  # phys pt post HW correction factor
                         )
@@ -1093,14 +1058,9 @@ def print_Stage2_lut_files(fit_functions,
         map_info['pt_post_corr_orig'] = pt_orig * corr_orig
         map_info['hw_pt_post_corr_orig'] = (map_info['pt_post_corr_orig'] * 2.).astype(int)
 
-        new_corr_mapping = calc_new_corr_mapping(pt_orig, corr_orig, new_pt_mapping)
-        map_info['corr_compressed'] = np.array(new_corr_mapping.values())
-
-        map_info['pt_post_corr_compressed'] = pt_orig * map_info['corr_compressed']
-        map_info['hw_pt_post_corr_compressed'] = (map_info['pt_post_corr_compressed'] * 2.).astype(int)
-
-        # then we calculate all the necessary correction integers
-        corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none, right_shift, num_add_bits)
+        # then we calculate all the necessary correction mult/add integers
+        corr_ints_new, add_ints = calc_hw_correction_addition_ints(map_info, corr_matrix_add_none,
+                                                                   right_shift, num_add_bits)
         map_info['hw_corr_compressed'], map_info['hw_corr_compressed_add'] = corr_ints_new, add_ints
 
         # Store the result of applying the HW correction ints
@@ -1113,17 +1073,13 @@ def print_Stage2_lut_files(fit_functions,
         map_info['hw_pt_post_hw_corr_compressed'] = hw_pt_post
         map_info['pt_post_hw_corr_compressed'] = hw_pt_post * 0.5
 
-        # for k, v in map_info.iteritems():
-        #     if v is not None:
-        #         print k, type(v), len(v)
-
         all_mapping_info[eta_ind] = map_info
 
-        if eta_ind in [0, 7]:
+        if eta_ind in [13, 14]:
             print_map_info(map_info)  # for debugging dict contents
 
         # Print some plots to check results.
-        # Show original corr, compressed corr, compressed corr from HW
+        # Show original corr & compressed corr from HW
         title = 'eta bin %d, target # bins %d, ' \
                 'merge criterion %.3f, %s merge algo' % (eta_ind,
                     target_num_pt_bins, merge_criterion, merge_algorithm)
@@ -1164,8 +1120,6 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
     """
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
              'b-', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
-    # plt.plot(map_info['pt_orig'], map_info['pt_post_corr_compressed'],
-    #          'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
              'g-', label='HW compressed', markersize=2, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
@@ -1247,8 +1201,6 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
     """
     plt.plot(map_info['pt_orig'], map_info['corr_orig'],
              'bo', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
-    plt.plot(map_info['pt_orig'], map_info['corr_compressed'],
-             'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['hw_pt_post_hw_corr_compressed'] / (1. * map_info['hw_pt_orig']),
              'gv', label='HW compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
