@@ -1137,11 +1137,11 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
-             'bo', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
-    plt.plot(map_info['pt_orig'], map_info['pt_post_corr_compressed'],
-             'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
+             'b-', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
+    # plt.plot(map_info['pt_orig'], map_info['pt_post_corr_compressed'],
+    #          'r^', label='Compressed', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
-             'gv', label='HW compressed', markersize=5, alpha=0.7, markeredgewidth=0)
+             'g-', label='HW compressed', markersize=2, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Post-Correction pT [GeV]')
     plt.legend(loc=0)
@@ -1296,15 +1296,16 @@ def plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir):
     plot_dir : str
         Where to save the plot
     """
-    plt.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x')
+    plt.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x', label='LUT vs func')
     plt.xlabel('LUT corrected HW pT')
     plt.ylabel('Function corrected HW pT')
     plt.xlim(0, 1024)
     plt.ylim(0, 1024)
-    plt.plot([0, 1024], [0, 1024])
+    plt.plot([0, 1024], [0, 1024], label='y = x')
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
+    plt.legend(loc='best')
     plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.pdf' % eta_ind))
 
     plt.xlim(0, 200)
