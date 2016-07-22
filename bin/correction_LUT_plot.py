@@ -544,12 +544,12 @@ def main(in_args=sys.argv[1:]):
                 plot_all_graph_functions(None, fits, os.path.join(out_dir, "fancyfit_all_fn.pdf"))
 
         if args.stage2:
-            lut_base, ext = os.path.splitext(args.lut)
-            eta_lut_filename = lut_base + '_eta' + ext
-            pt_lut_filename = lut_base + '_pt' + ext
-            corr_lut_filename = lut_base + "_corr" + ext
-            add_lut_filename = lut_base + "_add" + ext
-            add_mult_lut_filename = lut_base + "_add_mult" + ext
+            lut_base, ext = os.path.splitext(os.path.basename(args.lut))
+            eta_lut_filename = os.path.join(out_dir, lut_base + '_eta' + ext)
+            pt_lut_filename = os.path.join(out_dir, lut_base + '_pt' + ext)
+            corr_lut_filename = os.path.join(out_dir, lut_base + "_corr" + ext)
+            add_lut_filename = os.path.join(out_dir, lut_base + "_add" + ext)
+            add_mult_lut_filename = os.path.join(out_dir, lut_base + "_add_mult" + ext)
             print_Stage2_lut_files(fit_functions=fits,
                                    eta_lut_filename=eta_lut_filename,
                                    pt_lut_filename=pt_lut_filename,
