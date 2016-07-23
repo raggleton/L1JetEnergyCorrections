@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Plot browser</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <!-- FOR LOCAL TESTING: -->
+    <!-- Bootstrap core css-->
+    <!-- <link href="/Users/robina/bootstrap/bootstrap-3.3.6/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!-- Bootstrap theme -->
+    <!-- <link href="/Users/robina/bootstrap/bootstrap-3.3.6/dist/css/bootstrap-theme.min.css" rel="stylesheet"> -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <div class="navbar-brand" href="#" onclick="location.reload()">Ploty McPlotface</div>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <form class="navbar-form navbar-left" role="selector">
+
+              <button type="button" class="btn btn-default" id="showAllBtn">
+                Show Everything!
+              </button>
+
+              <div class="form-group">
+              <b>&nbsp; Or a specific plot: &nbsp;</b>
+                <!-- All selectors have options added later based on dicts -->
+                <!-- Plot type selector -->
+                <select class="form-control" id="selPlotType"></select>
+                <!-- Zoom X selecter -->
+                <select class="form-control" id="selZoomX" onchange="setApplicableXScale()"></select>
+                <!-- Log X or not -->
+                <select class="form-control" id="selXScale" disabled></select>
+                <!-- Eta bin selecter -->
+                <b>&nbsp;Eta bin:&nbsp;</b>
+                <select class="form-control" id="selEta"> </select>
+
+                <button type="button" class="btn btn-default" id="showPlotBtn">Show me!</button>
+
+              </div>
+            </form>
+
+          </ul>
+
+        </div> <!-- End of navbar-collapse -->
+      </div> <!-- End of container-fluid -->
+    </nav>
+
+    <!-- Placeholder for main plot(s) -->
+    <div id="placeholder" class="container-fluid center-block"></div>
+
+    <script>
+    document.getElementById("showAllBtn").addEventListener("click", function() { showAllPlots(3); });
+    document.getElementById("showPlotBtn").addEventListener("click", function() { showCentralPlot(); });
+
+    // These dicts govern the selector options
+    // Key is string for selector, value is for filename
+    var typeDict = {
+      "Correction vs PT": "corr_vs_pt",
+      "LUT corrected vs function corrected": "lut_vs_func",
+      "Post-corrected vs pre-corrected": "pt_pre_vs_post"
+    };
+
+    var xscaleDict = {
+      "Linear x scale": "",
+      "Log x scale": "logX"
+    };
+
+    var zoomXDict = {
+      "All PT": "",
+      "Small PT": "zoomX"
+    };
+
+    // Add options to selectors
+    var MAX_ETA = 15;
+    function addEtaOptions(selector) {
+      for (var eta = 0; eta <= MAX_ETA; eta++) {
+        var opt = document.createElement("option");
+        opt.innerHTML = eta;
+        selector.appendChild(opt);
+      }
+    }
+
+    addEtaOptions(document.getElementById("selEta"))
+
+    function addDictOptions(selector, dict) {
+      for (var optText in dict) {
+        var opt = document.createElement("option");
+        opt.innerHTML = optText;
+        selector.appendChild(opt);
+      }
+    }
+
+    addDictOptions(document.getElementById("selPlotType"), typeDict);
+    addDictOptions(document.getElementById("selXScale"), xscaleDict);
+    addDictOptions(document.getElementById("selZoomX"), zoomXDict);
+
+
+    // Show all plots in a big grid
+    function showAllPlots() {
+      var placeholder = document.getElementById("placeholder");
+      removeChildren(placeholder);
+
+      // Add column headers
+      var colNames = document.createElement("div")
+      var width = 1;
+      if (Object.keys(typeDict).length == 3) {
+        width = 4;
+      }
+      if (Object.keys(typeDict).length == 2) {
+        width = 6;
+      }
+      for (var plotType in typeDict) {
+        var col = document.createElement("div");
+        col.className = "col-sm-" + width;
+        col.innerHTML = "<h4>" + plotType + "</h4>";
+        colNames.appendChild(col);
+      }
+      placeholder.appendChild(colNames);
+
+      for (eta = 0; eta <= MAX_ETA; eta++) {
+        if (eta != 0) {
+          // Add a horizontal line to separate eta bins
+          placeholder.appendChild(document.createElement("hr"));
+        }
+        // Add a section header
+        var header = document.createElement("div")
+        header.innerHTML = "<b>eta bin " + eta + "</b>";
+        placeholder.appendChild(header);
+        addPlotRow(eta, width);
+      }
+    }
+
+    function addPlotRow(eta, width) {
+      var placeholder = document.getElementById("placeholder");
+      var className = "col-sm-" + width;
+      var plotRow = document.createElement("div");
+      plotRow.className = "row";
+      for (var plotType in typeDict) {
+        var col = document.createElement("div");
+        col.className = className;
+        var plotFilename = generatePlotName(
+          plotType,
+          document.getElementById("selXScale").value,
+          document.getElementById("selZoomX").value,
+          eta);
+        var link = document.createElement("a");
+        link.className = "img-thumbnail";
+        // var ext = plotFilename.substr(plotFilename.lastIndexOf('.') + 1);
+        // link.href = plotFilename.replace(ext, "pdf");
+        link.target = "_blank";
+        col.appendChild(link);
+
+        var img = document.createElement("img");
+        img.src = plotFilename;
+        img.className = "img-responsive";
+        img.alt = plotFilename;
+        link.appendChild(img);
+
+        plotRow.appendChild(col);
+      }
+      placeholder.appendChild(plotRow);
+    }
+
+    // Generate suitable plot name from selectors
+    function generatePlotNameFromSelectors() {
+      return generatePlotName(
+        document.getElementById("selPlotType").value,
+        document.getElementById("selXScale").value,
+        document.getElementById("selZoomX").value,
+        document.getElementById("selEta").value);
+    }
+
+    // Generate suitable plot name from strings.
+    function generatePlotName(typeSel, xscaleSel, ptRangeSel, etaSel) {
+      var plotType = typeDict[typeSel];
+      var xscale = xscaleDict[xscaleSel];
+      var ptRange = zoomXDict[ptRangeSel];
+      var name = plotType;
+      if (ptRange) {
+        name += "_" + ptRange;
+      }
+      if (xscale) {
+        name += "_" + xscale;
+      }
+      name += "_" + etaSel + ".png";
+      console.log(name);
+      return name;
+    }
+
+    // This inserts a central large plot in the frame.
+    function showCentralPlot() {
+      var placeholder = document.getElementById("placeholder");
+      removeChildren(placeholder);
+
+      var row = document.createElement("div");
+      row.className = "row";
+      placeholder.appendChild(row);
+
+      var col = document.createElement("div");
+      col.className = "col-sm-offset-2 col-sm-8";
+      row.appendChild(col);
+
+      var link = document.createElement("a");
+      link.className = "img-thumbnail";
+      var plotFilename = generatePlotNameFromSelectors();
+      link.href = plotFilename;
+      link.target = "_blank";
+      col.appendChild(link);
+
+      var img = document.createElement("img");
+      img.className = "img-responsive";
+      // var img = document.createElement("iframe");
+      img.src = plotFilename;
+      img.frameborder = 0;
+      img.alt = plotFilename;
+      link.appendChild(img);
+    }
+
+    // Remove all children from a node.
+    // Useful for cleaning up placeholder.
+    function removeChildren(element) {
+      while (element.lastChild) {
+        element.removeChild(element.lastChild);
+      }
+    }
+
+    function setApplicableXScale() {
+      var selZoomX = document.getElementById("selZoomX")
+      var selXScale = document.getElementById("selXScale");
+      if (selZoomX === "All PT") {
+        selXScale.setAttribute("disabled", "disabled");
+      } else {
+        selXScale.removeAttribute("disabled");
+      }
+    }
+
+    </script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- FOR LOCAL TESTING: -->
+    <!-- <script src="/Users/robina/bootstrap/bootstrap-3.3.6/dist/js/bootstrap.min.js"></script> -->
+  </body>
+</html>
