@@ -1088,6 +1088,8 @@ def print_map_info(map_info):
         print ' : '.join([str(map_info[k][i]) for k in keys])
 
 
+FMT = "png"
+
 def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
     """Plot map of pt (pre) -> pt (post), for original corrections,
     compressed corrections, and HW integer corrections, to compare.
@@ -1104,26 +1106,28 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
-             'b-', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
+             'b-', label='Function', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
-             'g-', label='HW compressed', markersize=2, alpha=0.7, markeredgewidth=0)
+             'g-', label='LUT', markersize=2, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Post-Correction pT [GeV]')
     plt.legend(loc=0)
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_%d.pdf' % eta_ind))
+    plt.vlines(1023.5, *plt.ylim(), linestyle='dashed')
+    plt.hlines(1023.5, *plt.xlim(), linestyle='dashed')
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(0, 150)
     plt.ylim(0, 150)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(5, 100)
     plt.ylim(5, 100)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_logX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_logX_%d.%s' % (eta_ind, FMT)))
 
     plt.clf()
 
@@ -1148,23 +1152,27 @@ def plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir):
                 c=map_info['pt_index'], linewidth=0, cmap=cm)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Post-Correction pT [GeV]')
-    plt.xlim(left=0)
-    plt.ylim(bottom=0)
+    # plt.xlim(left=0)
+    # plt.ylim(bottom=0)
+    max_pt = 1024
+    plt.xlim(0, max_pt)
+    plt.ylim(0, max_pt)
+
     # plt.legend(loc=0)
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(0, 150)
     plt.ylim(0, 150)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(5, 100)
     plt.ylim(5, 100)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_logX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_logX_%d.%s' % (eta_ind, FMT)))
 
     plt.clf()
 
@@ -1185,24 +1193,26 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['corr_orig'],
-             'bo', label='Original', markersize=5, alpha=0.7, markeredgewidth=0)
+             'bo', label='Function', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['hw_pt_post_hw_corr_compressed'] / (1. * map_info['hw_pt_orig']),
-             'gv', label='HW compressed', markersize=5, alpha=0.7, markeredgewidth=0)
+             'gv', label='LUT', markersize=5, alpha=0.7, markeredgewidth=0)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Correction')
     plt.ylim(0.5, 2.5)
+    max_pt = 1024
+    plt.xlim(0, max_pt)
     plt.legend(loc=0)
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(0, 300)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(5, 300)
     plt.xscale('log')
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.%s' % (eta_ind, FMT)))
 
     plt.clf()
 
@@ -1227,20 +1237,20 @@ def plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir):
                 c=map_info['pt_index'], linewidth=0, cmap=cm)
     plt.xlabel('Original pT [GeV]')
     plt.ylabel('Correction')
-    plt.xlim(left=0)
+    plt.xlim(0, 1024)
     plt.ylim(0.5, 2.5)
     # plt.legend(loc=0)
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_cluster_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_cluster_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(0, 300)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_cluster_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_cluster_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(5, 300)
     plt.xscale('log')
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.%s' % (eta_ind, FMT)))
 
     plt.clf()
 
@@ -1262,24 +1272,25 @@ def plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir):
     plt.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x', label='LUT vs func')
     plt.xlabel('LUT corrected HW pT')
     plt.ylabel('Function corrected HW pT')
-    plt.xlim(0, 1024)
-    plt.ylim(0, 1024)
-    plt.plot([0, 1024], [0, 1024], label='y = x')
+    max_pt = 2048
+    plt.xlim(0, max_pt)
+    plt.ylim(0, max_pt)
+    plt.plot([0, max_pt], [0, max_pt], label='y = x')
     plt.minorticks_on()
     plt.grid(which='both')
     plt.suptitle(title)
     plt.legend(loc='best')
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(0, 200)
     plt.ylim(0, 200)
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_%d.%s' % (eta_ind, FMT)))
 
     plt.xlim(1, 200)
     plt.ylim(1, 200)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_log_%d.pdf' % eta_ind))
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_logX_%d.%s' % (eta_ind, FMT)))
     plt.clf()
 
 
