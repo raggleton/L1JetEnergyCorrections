@@ -588,6 +588,11 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift,
 
         # add factor i.e. y-intercept
         intercept = int(round(hw_pt_post[lo] - (corr_factor  * hw_pt_orig[lo])))
+        ideal_intercept = intercept
+
+        # apply y = mx + c to bin edges
+        ideal_lo = (hw_pt_orig[lo]*corr_factor) + ideal_intercept
+        ideal_hi = (hw_pt_orig[hi-1]*corr_factor) + ideal_intercept
 
         # get pre/post centers to get integer for this bin
         # this ensure we get the correct multiplier, esp for low pT
@@ -612,21 +617,33 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift,
         # check interecpt (i.e addend) fits into specified num of bits
         # saturate if not. also accounts for -ve addend
         if abs(intercept) > (2**(num_add_bits-1) - 1):
-            sign = 1 if intercept > 0 else -1
-            intercept = (2**(num_add_bits-1) - 1) * sign
+            sign = np.sign(intercept)
+            intercept = (2**(num_add_bits-1) - 1) * np.sign(intercept)
             print 'WARNING: having to saturate addend'
 
         for i in xrange(lo, hi_orig):
             hw_corrections.append(corr_factor_int)
             hw_additions.append(intercept)
 
+        # check whether our attempt was successful
+        post_corr_lo = correct_iet(hw_pt_orig[lo], corr_factor_int,
+                                   right_shift, intercept)
+        post_corr_hi = correct_iet(hw_pt_orig[hi-1], corr_factor_int,
+                                   right_shift, intercept)
+
         print 'Pre bin edges:', hw_pt_orig[lo], hw_pt_orig[hi-1]
         print 'Post bin edges:', hw_pt_post[lo], hw_pt_post_hi
         print 'Mean pre/post:', mean_hw_pt_pre, mean_hw_pt_post
-        print 'Ideal corr factor, intercept:', corr_factor, intercept
-        print 'Applying y = mx + c to bin edges:', (hw_pt_orig[lo]*corr_factor) + intercept, (hw_pt_orig[hi-1]*corr_factor) + intercept
-        print 'Actual corr factor, add:', corr_factor_int, intercept
-        print 'Applying proper integer calc to bin edges:', correct_iet(hw_pt_orig[lo], corr_factor_int, right_shift, intercept), correct_iet(hw_pt_orig[hi-1], corr_factor_int, right_shift, intercept)
+        print 'Ideal corr factor, intercept:', corr_factor, ideal_intercept
+        print 'Applying y = mx + c to bin edges:', ideal_lo, ideal_hi
+        print 'Actual corr factor & add:', corr_factor_int, intercept
+        print 'Applying proper integer calc to bin edges:', post_corr_lo, post_corr_hi
+
+        if hw_pt_post[lo] > 0 and 1. * abs(post_corr_lo - hw_pt_post[lo])/hw_pt_post[lo] > 0.1:
+            print 'WARNING: integer correction deviates by more than 10% at low bin edge'
+
+        if 1. * abs(post_corr_hi - hw_pt_post_hi)/hw_pt_post_hi > 0.1:
+            print 'WARNING: integer correction deviates by more than 10% at high bin edge'
 
     return np.array(hw_corrections), np.array(hw_additions)
 
