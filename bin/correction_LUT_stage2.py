@@ -530,39 +530,6 @@ def calc_hw_corr_factor(corr_matrix, iet_pre, iet_post):
             return ind - 1
 
 
-def calc_hw_correction_ints(hw_pts, corrections, corr_matrix, cap_correction):
-    """For each pt bin calculate the integer correction factor that gives the
-    closest factor to the equivalent entry in corrections.
-
-    Parameters
-    ----------
-    hw_pts : list[int]
-        Input hardware pTs
-    corrections : list[float]
-        Target correction factors
-    corr_matrix : np.ndarray
-        2D Matrix that maps hw pt (pre) and correction integer to hw pt (post).
-    cap_correction : float
-        Maximum physical correction (to stop ridiculously large factors)
-
-    Returns
-    -------
-    list[int]
-        List of HW correction integers, one per entry in hw_pts
-    """
-    print 'Assigning HW correction factors'
-
-    hw_corrections = []
-
-    for hw_pt_pre, corr in izip(hw_pts, corrections):
-        # print hw_pt_pre, corr
-        hw_pt_post = int(round(hw_pt_pre * corr))
-        hw_factor = calc_hw_corr_factor(corr_matrix, hw_pt_pre, hw_pt_post)
-        hw_corrections.append(hw_factor)
-
-    return np.array(hw_corrections)
-
-
 def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift, num_add_bits):
     """For each pt bin calculate the integer correction factor and additive
     factor that gives the closest factor to the equivalent entry in corrections.
