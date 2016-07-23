@@ -573,14 +573,26 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift,
     for lo, hi in pairwise(unique_inds):
         print '-----'
         # average correction factor for this bin i.e. gradient
-        corr_factor = (hw_pt_post[hi-1] - hw_pt_post[lo]) / (1.* hw_pt_orig[hi-1] - hw_pt_orig[lo])
+        # we use the edges of the bin to ensure continuity between bins
+        hi_orig = hi
+        hw_pt_post_hi = hw_pt_post[hi-1]
+        # max_hw_pt = 600
+        if hw_pt_post_hi > max_hw_pt:
+            hw_pt_post_hi = max_hw_pt
+            # now refind the index of the entry that is closest to max_hw_pt
+            hi = min(range(len(hw_pt_post)),
+                     key=lambda x: abs(hw_pt_post[x] - max_hw_pt)) + 1
+            print 'Upper limit of post-corrected pt >', max_hw_pt, ', setting to', hw_pt_post_hi
+
+        corr_factor = (hw_pt_post_hi - hw_pt_post[lo]) / (1.* hw_pt_orig[hi-1] - hw_pt_orig[lo])
 
         # add factor i.e. y-intercept
         intercept = int(round(hw_pt_post[lo] - (corr_factor  * hw_pt_orig[lo])))
 
         # get pre/post centers to get integer for this bin
+        # this ensure we get the correct multiplier, esp for low pT
         mean_hw_pt_pre = int(round(0.5 * (hw_pt_orig[hi-1] + hw_pt_orig[lo])))
-        mean_hw_pt_post = int(round( (0.5 * (hw_pt_post[hi-1] + hw_pt_post[lo]))))
+        mean_hw_pt_post = int(round(0.5 * (hw_pt_post_hi + hw_pt_post[lo])))
 
         # subtract intercept as want factor just for gradient
         corr_factor_int = calc_hw_corr_factor(corr_matrix,
@@ -604,12 +616,12 @@ def calc_hw_correction_addition_ints(map_info, corr_matrix, right_shift,
             intercept = (2**(num_add_bits-1) - 1) * sign
             print 'WARNING: having to saturate addend'
 
-        for i in xrange(lo, hi):
+        for i in xrange(lo, hi_orig):
             hw_corrections.append(corr_factor_int)
             hw_additions.append(intercept)
 
         print 'Pre bin edges:', hw_pt_orig[lo], hw_pt_orig[hi-1]
-        print 'Post bin edges:', hw_pt_post[lo], hw_pt_post[hi-1]
+        print 'Post bin edges:', hw_pt_post[lo], hw_pt_post_hi
         print 'Mean pre/post:', mean_hw_pt_pre, mean_hw_pt_post
         print 'Ideal corr factor, intercept:', corr_factor, intercept
         print 'Applying y = mx + c to bin edges:', (hw_pt_orig[lo]*corr_factor) + intercept, (hw_pt_orig[hi-1]*corr_factor) + intercept
