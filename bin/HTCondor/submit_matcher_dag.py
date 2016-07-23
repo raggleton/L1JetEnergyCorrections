@@ -89,13 +89,16 @@ PT_REF_MIN = 10
 # TDirectory name for the L1 jets
 L1_DIR = 'l1UpgradeEmuTree'
 if SAMPLE.startswith('MC') and '_PF_' in SAMPLE:
-        L1_DIR = 'l1JetRecoTree'  # for PF vs Gen
+    L1_DIR = 'l1JetRecoTree'  # for PF vs Gen
+elif SAMPLE == "DATA":
+    L1_DIR = 'l1UpgradeTree'
 
 # TDirectory name for the reference jets
 REF_DIR = 'l1JetRecoTree'
 if SAMPLE.startswith('MC'):
     if SAMPLE.endswith('Gen'):
-        REF_DIR = 'l1ExtraTreeGenAk4'
+        # REF_DIR = 'l1ExtraTreeGenAk4'
+        REF_DIR = 'l1GeneratorTree'
     elif SAMPLE.endswith('PF'):
         REF_DIR = 'l1JetRecoTree'
     else:
@@ -260,9 +263,9 @@ def submit_matcher_dag(exe, ntuple_dir, output_dir, log_dir,
                              copy_exe=True,
                              filename=os.path.join(log_dir, 'submit_matcher.condor'),
                              setup_script=None,
-                             out_dir=log_dir, out_file=log_stem + '.out',
-                             err_dir=log_dir, err_file=log_stem + '.err',
-                             log_dir=log_dir, log_file=log_stem + '.log',
+                             out_dir=os.path.join(log_dir, 'logs'), out_file=log_stem + '.out',
+                             err_dir=os.path.join(log_dir, 'logs'), err_file=log_stem + '.err',
+                             log_dir=os.path.join(log_dir, 'logs'), log_file=log_stem + '.log',
                              cpus=1, memory='100MB', disk='100MB',
                              transfer_hdfs_input=False,
                              share_exe_setup=True,
@@ -293,10 +296,10 @@ def submit_matcher_dag(exe, ntuple_dir, output_dir, log_dir,
         # handle anything up to first underscore (L1Tree, L1Ntuple, ...)
         result = re.match(r'^[a-zA-Z0-9]*_', ntuple_name)
         if result:
-            pairs_file = '%s_%s.root' % (ntuple_name.replace(result.group(), 'pairs_'),
-                                         append.format(**fmt_dict))
+            pairs_file = '%s_%s_%s.root' % (ntuple_name.replace(result.group(), 'pairs_'),
+                                         append.format(**fmt_dict), cc.rand_str(5))
         else:
-            pairs_file = 'pairs_%s_%s.root' % (ntuple_name, append.format(**fmt_dict))
+            pairs_file = 'pairs_%s_%s_%s.root' % (ntuple_name, append.format(**fmt_dict), cc.rand_str(5))
         out_file = os.path.join(output_dir, os.path.basename(ntuple_dir.rstrip('/')), pairs_file)
         cc.check_create_dir(os.path.dirname(out_file))
         match_output_files.append(out_file)
@@ -344,9 +347,9 @@ def submit_matcher_dag(exe, ntuple_dir, output_dir, log_dir,
     rm_jobs = ht.JobSet(exe='hadoop',
                         copy_exe=False,
                         filename=os.path.join(log_dir, 'submit_matcherRm.condor'),
-                        out_dir=log_dir, out_file=log_stem + '.out',
-                        err_dir=log_dir, err_file=log_stem + '.err',
-                        log_dir=log_dir, log_file=log_stem + '.log',
+                        out_dir=os.path.join(log_dir, 'logs'), out_file=log_stem + '.out',
+                        err_dir=os.path.join(log_dir, 'logs'), err_file=log_stem + '.err',
+                        log_dir=os.path.join(log_dir, 'logs'), log_file=log_stem + '.log',
                         cpus=1, memory='100MB', disk='10MB',
                         transfer_hdfs_input=False,
                         share_exe_setup=False,
@@ -403,10 +406,10 @@ def add_hadd_jobs(dagman, jobs, final_file, log_dir):
                           copy_exe=False,
                           filename=os.path.join(log_dir, 'haddBig.condor'),
                           setup_script=None,
-                          out_dir=log_dir, out_file=log_stem + '.out',
-                          err_dir=log_dir, err_file=log_stem + '.err',
-                          log_dir=log_dir, log_file=log_stem + '.log',
-                          cpus=1, memory='100MB', disk='1GB',
+                          out_dir=os.path.join(log_dir, 'logs'), out_file=log_stem + '.out',
+                          err_dir=os.path.join(log_dir, 'logs'), err_file=log_stem + '.err',
+                          log_dir=os.path.join(log_dir, 'logs'), log_file=log_stem + '.log',
+                          cpus=1, memory='1GB', disk='1GB',
                           transfer_hdfs_input=False,
                           share_exe_setup=True,
                           hdfs_store=os.path.dirname(final_file))

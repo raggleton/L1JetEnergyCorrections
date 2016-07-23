@@ -19,6 +19,7 @@
 // Headers from L1TNtuples
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisEventDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisL1ExtraDataFormat.h"
+#include "L1Trigger/L1TNtuples/interface/L1AnalysisGeneratorDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisL1UpgradeDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisRecoVertexDataFormat.h"
 
@@ -35,33 +36,12 @@ using std::cout;
 using std::endl;
 using L1Analysis::L1AnalysisEventDataFormat;
 using L1Analysis::L1AnalysisL1ExtraDataFormat;
+using L1Analysis::L1AnalysisGeneratorDataFormat;
 using L1Analysis::L1AnalysisL1UpgradeDataFormat;
 using L1Analysis::L1AnalysisRecoVertexDataFormat;
 using boost::lexical_cast;
 
 namespace fs = boost::filesystem;
-
-std::map<int, int> load_lut(std::string filename);
-int getAbsIEta(float eta);
-int getAddress(int iet, int ieta);
-float getCorrectedEt(std::map<int, int> & pt_lut, std::map<int, int> & corr_lut,
-                     float et, float eta);
-float iPhiToPhi(int iphi);
-
-float regionEtas[12] = {0,0.348,0.696,1.044,1.392,1.740,2.172,3.0,3.5,4.0,4.5,5.0};
-
-int regionEta(float eta) {
-  for (int i=0; i<11; ++i) {
-    if (fabs(eta) > regionEtas[i] && fabs(eta) <= regionEtas[i+1])  return i;
-  }
-  return -1;
-}
-
-double correction(float pt, float eta, double params[11][8]);
-
-bool sortByGenPt(const MatchedPair & lhs, const MatchedPair & rhs) { return lhs.refJet().Pt() > rhs.refJet().Pt(); };
-
-bool isCenJet(const MatchedPair & pair) { return fabs(pair.l1Jet().Eta()) < 3; };
 
 /**
  * @brief Matching L1 jets from L1UpgradeTree, to reference GenJets from L1ExtraTree.
@@ -82,10 +62,10 @@ int main(int argc, char* argv[]) {
     // get input TTrees
     // Reference jets - GenJets
     TString refJetDirectory = opts.refJetDirectory();
-    L1GenericTree<L1AnalysisL1ExtraDataFormat> refJetTree(opts.inputFilename(),
-                                                          refJetDirectory+"/L1ExtraTree",
-                                                          "L1Extra");
-    L1AnalysisL1ExtraDataFormat * refData = refJetTree.getData();
+    L1GenericTree<L1AnalysisGeneratorDataFormat> refJetTree(opts.inputFilename(),
+                                                          refJetDirectory+"/L1GenTree",
+                                                          "Generator");
+    L1AnalysisGeneratorDataFormat * refData = refJetTree.getData();
 
     // L1 jets
     TString l1JetDirectory = opts.l1JetDirectory();
@@ -94,20 +74,12 @@ int main(int argc, char* argv[]) {
                                                            "L1Upgrade");
     L1AnalysisL1UpgradeDataFormat * l1Data = l1JetTree.getData();
 
-    // TTree that holds PileupInfo
-    PileupInfoTree puInfoTree(opts.inputFilename());
 
     // hold Event tree
     L1GenericTree<L1AnalysisEventDataFormat> eventTree(opts.inputFilename(),
                                                          "l1EventTree/L1EventTree",
                                                          "Event");
     L1AnalysisEventDataFormat * eventData = eventTree.getData();
-
-    // hold reco vertex info
-    // L1GenericTree<L1AnalysisRecoVertexDataFormat> recoVtxTree(opts.inputFilename(),
-    //                                                           "l1RecoTree/RecoTree",
-    //                                                            "Vertex");
-    // L1AnalysisRecoVertexDataFormat * recoVtxData = recoVtxTree.getData();
 
     // input filename stem (no .root)
     fs::path inPath(opts.inputFilename());
@@ -213,48 +185,6 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<Matcher> matcher(new DeltaR_Matcher(maxDeltaR, minRefJetPt, maxRefJetPt, minL1JetPt, maxL1JetPt, maxJetEta));
     std::cout << *matcher << std::endl;
 
-    ////////////////
-    // SETUP LUTS //
-    ////////////////
-    // to convert pt,eta to index (compressed)
-    // std::map<int, int> pt_lut = load_lut("/users/ra12451/L1JEC/CMSSW_7_6_0_pre7/src/L1Trigger/L1JetEnergyCorrections/Stage2_QCDFlatSpring15BX25HCALFix_26Nov_76X_mcRun2_asymptotic_v5_jetSeed1p5_noJec_v2/output/stage2_lut_pu15to25/stage2_lut_pu15to25_pt.txt");
-    std::map<int, int> pt_lut;
-    // to map index : hw correction factor
-    // std::map<int, int> corr_lut = load_lut("/users/ra12451/L1JEC/CMSSW_7_6_0_pre7/src/L1Trigger/L1JetEnergyCorrections/Stage2_QCDFlatSpring15BX25HCALFix_26Nov_76X_mcRun2_asymptotic_v5_jetSeed1p5_noJec_v2/output/stage2_lut_pu15to25/stage2_lut_pu15to25_corr.txt");
-    std::map<int, int> corr_lut;
-    if (opts.correctionFilename() != "") {
-        pt_lut = load_lut("stage2_lut_pu15to25_pt.txt");
-        corr_lut = load_lut("stage2_lut_pu15to25_corr.txt");
-    }
-
-/*    double funcParams4[11][8] = {
-      { 2.08107691501,22.4129703515,5.46086027683,-150.888778124,18.3292242153,16968.6469599,0.0147496053457,-22.4089831889 },
-      { 2.04880080215,22.5083699943,10.2635352836,-466.890522023,32.5408463829,2429.03382746,0.0111274121697,-22.0890253377 },
-      { 2.03808638982,22.2127275989,13.7594864391,-761.860391454,39.9060363401,1019.30588542,0.00952105483129,-21.6814176696 },
-      { 2.05901166216,23.8125466978,14.119589176,-766.199501821,38.7767169666,1059.63374337,0.00952979125289,-21.6477483043 },
-      { 2.08021511285,22.265051562,14.0198255047,-769.175319944,38.687351315,1072.9785137,0.00951954709279,-21.6277409602 },
-      { 2.04623980351,19.6049149791,12.2578170485,-736.96846599,45.3225355911,848.976802835,0.00946235693865,-21.7970133915 },
-      { 1.77585386314,24.1202894336,10.1179757811,-697.422255848,55.9767511168,599.040770412,0.00930772659892,-21.9921521313 },
-      { 1.42460009989,1024,1,0,1,0,1,1 },
-      { 1.37157036457,1024,1,0,1,0,1,1 },
-      { 1.37830172245,1024,1,0,1,0,1,1 },
-      { 1.36123039014,1024,1,0,1,0,1,1 },
-    };*/
-/*
-    double funcParams5[11][8] = {
-      { 1.85654432772,29.1779814299,5.93738250047,-188.618421587,23.5055878881,15481.6853917,0.01545758831,-21.9321959989 },
-      { 1.86683225196,28.5893940566,7.94415725192,-314.427488849,29.7352089394,6153.57607,0.0136091836255,-21.8490511405 },
-      { 1.87275107753,28.6997236682,10.5573368438,-474.149928322,33.0929700288,3075.32028268,0.0119648577597,-21.7908155125 },
-      { 1.93675455767,27.8884842745,10.4257201468,-472.621608809,33.705157155,3003.72148818,0.0119490813992,-21.8003847032 },
-      { 1.8829708424,28.5534869174,10.4514369849,-475.146502442,33.2201024621,3084.15497191,0.0119473728743,-21.778533095 },
-      { 1.95700730302,20.8033388211,8.21037294488,-440.555146819,43.3753969091,2076.29499709,0.0117726824911,-21.9651107434 },
-      { 1.68923714809,27.78846291,6.64274683779,-415.710057696,55.0222309142,1370.81335041,0.0115025916177,-22.1054873456 },
-      { 1.37070618136,1024,1,0,1,0,1,1 },
-      { 1.33685072327,1024,1,0,1,0,1,1 },
-      { 1.27627349839,1024,1,0,1,0,1,1 },
-      { 1.35003172007,1024,1,0,1,0,1,1 },
-    };*/
-
     //////////////////////
     // LOOP OVER EVENTS //
     //////////////////////
@@ -278,23 +208,15 @@ int main(int argc, char* argv[]) {
         // Store pileup quantities //
         /////////////////////////////
         // note these get stored once per pair of matched jets NOT once per event
-        puInfoTree.GetEntry(iEntry);
-        out_trueNumInteractions = puInfoTree.trueNumInteractions();
-        out_numPUVertices = puInfoTree.numPUVertices();
+        out_trueNumInteractions = refData->nMeanPU;
+        out_numPUVertices = refData->nVtx;
         // out_recoNVtx = recoVtxData->nVtx;
 
         /////////////////////////////////////////////
         // Make vectors of ref & L1 jets from trees //
         /////////////////////////////////////////////
-        std::vector<TLorentzVector> refJets = makeTLorentzVectors(refData->cenJetEt, refData->cenJetEta, refData->cenJetPhi);
+        std::vector<TLorentzVector> refJets = makeTLorentzVectors(refData->jetPt, refData->jetEta, refData->jetPhi);
         std::vector<TLorentzVector> l1Jets = makeTLorentzVectors(l1Data->jetEt, l1Data->jetEta, l1Data->jetPhi);
-
-        // apply calibration
-        // for (auto & itr: l1Jets) {
-        //     // double corrEt = itr.Et() * correction(itr.Et(), itr.Eta(), funcParams4);
-        //     double corrEt = itr.Et() * correction(itr.Et(), itr.Eta(), funcParams5);
-        //     itr.SetPtEtaPhiM(corrEt, itr.Eta(), itr.Phi(), 0);
-        // }
 
         out_nL1 = l1Jets.size();
         out_nRef = refJets.size();
@@ -350,36 +272,9 @@ int main(int argc, char* argv[]) {
         //////////////////////////////////////////
         out_nMatches = matchResults.size();
 
-        // split into cen and fwd
-        // std::vector<MatchedPair> cenMatchResults;
-        // std::copy_if(matchResults.begin(), matchResults.end(), std::back_inserter(cenMatchResults), isCenJet);
-
-        // sort by decreasing genjet pt
-        // std::sort(cenMatchResults.begin(), cenMatchResults.end(), sortByGenPt);
-        // if (cenMatchResults.size() == 0) continue;
-        // auto it = cenMatchResults.at(0);
-        // out_pt = it.l1Jet().Et();
-        // out_eta = it.l1Jet().Eta();
-        // out_phi = it.l1Jet().Phi();
-        // out_dr = it.refJet().DeltaR(it.l1Jet());
-        // out_deta = it.refJet().Eta() - it.l1Jet().Eta();
-        // out_dphi = it.refJet().DeltaPhi(it.l1Jet());
-        // out_ptRef = it.refJet().Pt();
-        // out_etaRef = it.refJet().Eta();
-        // out_phiRef = it.refJet().Phi();
-        // out_ptDiff = out_pt - out_ptRef;
-        // out_rsp = out_pt/out_ptRef;
-        // out_resL1 = out_ptDiff/out_pt;
-        // out_resRef = out_ptDiff/out_ptRef;
-        // outTree.Fill();
-
         for (const auto &it: matchResults) {
             // std::cout << it << std::endl;
-            if (opts.correctionFilename() != "") {
-                out_pt = getCorrectedEt(pt_lut, corr_lut, it.l1Jet().Et(), it.l1Jet().Eta());
-            } else {
-                out_pt = it.l1Jet().Et();
-            }
+            out_pt = it.l1Jet().Et();
             out_eta = it.l1Jet().Eta();
             out_phi = it.l1Jet().Phi();
             out_dr = it.refJet().DeltaR(it.l1Jet());
@@ -420,121 +315,4 @@ int main(int argc, char* argv[]) {
     outTree.Write("", TObject::kOverwrite);
     outFile->Close();
     return 0;
-}
-
-
-/**
- * @brief Load a LUT from file into map.
- * @details Ignores any lines starting with a #.
- *
- * @param filename filename of LUT
- * @return std::map<int, int> with LUT contents.
- */
-std::map<int, int> load_lut(std::string filename) {
-    cout << "Loading LUT " << filename << endl;
-    std::map<int, int> lut;
-    std::ifstream infile(filename);
-    std::string line = "";
-    while (std::getline(infile, line)) {
-        if (boost::starts_with(line, "#")) {
-            continue;
-        }
-        std::vector<std::string> parts;
-        boost::split(parts, line, boost::is_any_of(" "), boost::token_compress_on);
-        int key = lexical_cast<int>(parts[0]);
-        int value = lexical_cast<int>(parts[1]);
-        lut.insert(std::make_pair(key, value));
-    }
-    return lut;
-}
-
-/**
- * @brief Convert physical eta to ieta using the absolute value of eta.
- *
- * @param eta Physical eta
- * @return HW Eta
- */
-int getAbsIEta(float eta) {
-    std::vector<float> eta_bins = {0.0, 0.348, 0.695, 1.044, 1.392, 1.74, 2.172, 3.0, 3.5, 4.0, 4.5, 5};
-    float absEta = fabs(eta);
-    for (unsigned i = 0; i < eta_bins.size()-1; i++) {
-        if ((eta_bins[i] < absEta) && (absEta < eta_bins[i+1])) {
-            return i;
-        }
-    }
-    return eta_bins.size();
-}
-
-/**
- * @brief Convert iet, ieta into an address
- * @details [long description]
- *
- * @param iet HW et
- * @param ieta HW eta
- *
- * @return Address
- */
-int getAddress(int iet, int ieta) {
-    return (iet<<4) + ieta;
-}
-
-
-float getCorrectedEt(std::map<int, int> & pt_lut, std::map<int, int> & corr_lut,
-                     float et, float eta) {
-    unsigned int iet = (unsigned int) et * 2;
-    unsigned int ieta = abs(getAbsIEta(eta));
-    int address = getAddress(iet, ieta);
-    int index = pt_lut[address];
-    int corr_factor = corr_lut[index];
-    int corrected_iet = (corr_factor*iet)>>7;
-    corrected_iet += iet;
-    return corrected_iet * 0.5;
-}
-
-
-/**
- * @brief Convert iPhi to phi as workaround for bug in ntuples
- * @details l1UpgradeEMuTree/jetPhi not correct - use iPhi + this fn instead,
- *
- * @param iphi HW phi
- * @return Physical phi (in radians)
- */
-const float towerSizeDegrees = 5.;
-float iPhiToPhi(int iphi) {
-    if (iphi > 72)
-        throw std::range_error("iPhi > 72");
-    if (iphi < 1)
-        throw std::range_error("iPhi < 1");
-    float eta = (iphi * towerSizeDegrees) - (0.5 * towerSizeDegrees);
-    if (iphi > 36)
-        eta -= 360.;
-    return eta * TMath::Pi() / 180.;
-}
-
-
-double correction(float pt, float eta, double params[11][8]) {
-
-    int etaInd = regionEta(eta);
-    double par[8];
-    for(int i=0; i<8; i++) {
-        par[i] = params[etaInd][i];
-    }
-
-    double plateauLimit = par[1]; // plateau limit applies to physical, uncorrected pT
-    if (pt < plateauLimit) {
-
-        return par[0];
-    } else {
-        double logX = log10(pt);
-        double term1 = par[3] / ( logX * logX + par[4] );
-        double term2 = par[5] * exp( -par[6]*((logX - par[7])*(logX - par[7])) );
-
-        // Final fitting function, with sanity check
-        double f = par[2] + term1 + term2;
-        if (f < 0)
-            f = 0;
-        if (f != f) // stop NaN
-            f = 1;
-        return f;
-    }
 }

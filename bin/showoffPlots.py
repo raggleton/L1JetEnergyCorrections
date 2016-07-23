@@ -719,12 +719,15 @@ def plot_correction_graph(calib_file, eta_min, eta_max, oDir, oFormat='pdf'):
     gr = cu.get_from_file(calib_file, gname)
     c = generate_canvas()
     gr.Draw("ALP")
-    y_min = ROOT.TMath.MinElement(gr.GetN(), gr.GetY())
-    y_max = ROOT.TMath.MaxElement(gr.GetN(), gr.GetY())
-    if y_max > 5:
-        y_max = 5
-    gr.GetYaxis().SetRangeUser(y_min * 0.7, y_max * 1.1)
-    c.SaveAs('%s/%s.%s' % (oDir, gname, oFormat))
+    if gr.GetN() == 0:
+        print "No points in graph - not producing plot"
+    else:
+        y_min = ROOT.TMath.MinElement(gr.GetN(), gr.GetY())
+        y_max = ROOT.TMath.MaxElement(gr.GetN(), gr.GetY())
+        if y_max > 5:
+            y_max = 5
+        gr.GetYaxis().SetRangeUser(y_min * 0.7, y_max * 1.1)
+        c.SaveAs('%s/%s.%s' % (oDir, gname, oFormat))
 
 
 def plot_rsp_eta_pt_bin(calib_file, eta_min, eta_max, pt_min, pt_max, oDir, oFormat="pdf"):
@@ -1102,7 +1105,7 @@ def main(in_args=sys.argv[1:]):
 
         calib_file = cu.open_root_file(args.calib)
 
-        for eta_min, eta_max in pairwise(binning.eta_bins):
+        for eta_min, eta_max in pairwise(binning.eta_bins[:-1]):
 
             print eta_min, eta_max
 
