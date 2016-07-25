@@ -23,7 +23,7 @@ SETTINGS['MHT_jetThreshold'] = 60
 
 def pad_hex(h, length):
     """Ensure hex string is right length and case"""
-    return '0x' + h.strip('0x').rjust(length, '0').upper()
+    return '0x' + h.lstrip('0x').rjust(length, '0').upper()
 
 
 def hexify_int(i):
