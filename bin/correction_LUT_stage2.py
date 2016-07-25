@@ -825,7 +825,7 @@ def calo_ieta_to_index(ieta):
         [33, 34, 35, 36],
         [37, 38, 39, 40, 41]
     ]
-    for ind, ieta_bin in enumerate(ieta_bins, 1):
+    for ind, ieta_bin in enumerate(ieta_bins, 0):
         if ieta in ieta_bin:
             return ind
     raise IndexError("Cannot find your ieta %d"  % ieta)
