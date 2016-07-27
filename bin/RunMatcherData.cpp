@@ -308,6 +308,10 @@ int main(int argc, char* argv[]) {
             out_muMult = refData->muMult[rInd];
             out_hfhMult = refData->hfhMult[rInd];
             out_hfemMult = refData->hfemMult[rInd];
+
+            // hack on some cuts as to whether we should save for this matched pair
+            // we want to keep the final file size down
+            if ( fabs(l1Jet().Eta())>2.50 ) // only look at forward-ish jets
             outTree.Fill();
         }
 
