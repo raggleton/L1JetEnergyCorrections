@@ -61,14 +61,14 @@ int main(int argc, char* argv[]) {
     // Reco jets
     TString refJetDirectory = opts.refJetDirectory();
     L1GenericTree<L1AnalysisRecoJetDataFormat> refJetTree(opts.inputFilename(),
-                                                          refJetDirectory+"/JetRecoTree",
+                                                          "l1JetRecoTree/JetRecoTree",
                                                           "Jet");
     L1AnalysisRecoJetDataFormat * refData = refJetTree.getData();
 
     // L1 jets
     TString l1JetDirectory = opts.l1JetDirectory();
     L1GenericTree<L1AnalysisL1UpgradeDataFormat> l1JetTree(opts.inputFilename(),
-                                                           l1JetDirectory+"/L1UpgradeTree",
+                                                           "l1UpgradeTree/L1UpgradeTree",
                                                            "L1Upgrade");
     L1AnalysisL1UpgradeDataFormat * l1Data = l1JetTree.getData();
 

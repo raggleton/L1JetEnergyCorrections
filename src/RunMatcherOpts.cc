@@ -41,17 +41,17 @@ RunMatcherOpts::RunMatcherOpts(int argc, char* argv[]):
     input_(""),
     refDir_(""),
     l1Dir_(""),
-    output_("pairs.root"),
+    output_(""),
     corrFilename_(""),
     nEvents_(-1),
     drawN_(0),
     correctionMinPt_(-1),
-    deltaR_(0.4), // Stage2 defaults
+    deltaR_(0.3), // Stage2 defaults
     l1MinPt_(0.1),
     refMinPt_(10),
-    l1MaxEta_(5.),
-    refMaxEta_(5.),
-    cleanJets_("")
+    l1MaxEta_(5.1),
+    refMaxEta_(5.1),
+    cleanJets_("TIGHTLEPVETO")
 {
     namespace po = boost::program_options;
 
