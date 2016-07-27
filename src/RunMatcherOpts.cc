@@ -51,7 +51,7 @@ RunMatcherOpts::RunMatcherOpts(int argc, char* argv[]):
     refMinPt_(10),
     l1MaxEta_(5.1),
     refMaxEta_(5.1),
-    cleanJets_("TIGHTLEPVETO")
+    cleanJets_("")
 {
     namespace po = boost::program_options;
 
