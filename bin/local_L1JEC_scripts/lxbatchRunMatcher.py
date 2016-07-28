@@ -38,7 +38,8 @@ os.system("mkdir %s" % outputDirectory)
 # 		# os.system("source /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcher.sh %s %s" % (inputFilePath, outputFilesPath) )
 
 # 		# for the real thing
-# 		os.system('bsub -q 8nh "sh /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcher.sh %s %s"' % (inputFilePath, outputFilesPath) )
+		# os.system('bsub -q 8nh "sh /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcherData.sh %s %s"' % (inputFilePath, outputFilesPath) )
+		# os.system('bsub -q 8nh "sh /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcher.sh %s %s"' % (inputFilePath, outputFilesPath) )
 
 
 
@@ -128,3 +129,4 @@ for rootFile in rootFiles:
 	inputFilePath = dirPath + rootFile
 	outputFilesPath = outputDirectory + "pairs_" + rootFile
 	os.system('bsub -q 8nh "sh /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcher.sh %s %s"' % (inputFilePath, outputFilesPath) )
+	# os.system('bsub -q 8nh "sh /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/submit_lxbatchRunMatcherData.sh %s %s"' % (inputFilePath, outputFilesPath) )

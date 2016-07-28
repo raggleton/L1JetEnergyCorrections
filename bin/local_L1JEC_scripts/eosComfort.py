@@ -65,7 +65,7 @@ for i in range (0,len(daughterDirs)):
 # the list of dir-path
 # print fullPaths
 
-print daughterDirs
+# print daughterDirs
 
 # the list of ntuple files
 # print ntupleNames
