@@ -228,6 +228,7 @@ int main(int argc, char* argv[]) {
     // produce matching pairs and store
     Long64_t drawCounter(0), matchedEvent(0), cscFail(0);
     Long64_t counter(0);
+    Long64_t interstingEvents(0);
     for (Long64_t iEntry = 0; counter < nEntries; ++iEntry, ++counter) {
 
 
@@ -324,10 +325,12 @@ int main(int argc, char* argv[]) {
 
             if (fabs(out_eta) > 2.8 && (out_pt < (1.31 * (out_ptRef-140)))) {
                 outTree.Fill();
-                cout << "Interesting event! (run " << out_run << " event " << out_event << ")" << endl;
+                interstingEvents++;
+                cout << "Interesting event! (run " << out_run << " LS " << out_ls << " event " << out_event << ")" << endl;
                 std::string baseFilename = fs::path(opts.inputFilename()).stem().string();
-                std::string towerPlotname = "towerMap_" + lexical_cast<std::string>(out_run)
-                                            + "_" + lexical_cast<std::string>(out_event)
+                std::string towerPlotname = "towerMap_run" + lexical_cast<std::string>(out_run)
+                                            + "_LS" + lexical_cast<std::string>(out_ls)
+                                            + "_evt" + lexical_cast<std::string>(out_event)
                                             + "_" + baseFilename + ".pdf";
                 std::string title = "eta: " + lexical_cast<std::string>(out_eta)
                                     + " phi: " + lexical_cast<std::string>(out_phi)
@@ -360,6 +363,7 @@ int main(int argc, char* argv[]) {
     outTree.Write("", TObject::kOverwrite);
     outFile->Close();
     cout << matchedEvent << " events had 1+ matches, out of " << nEntries << endl;
+    cout << "Total interesting events: " << interstingEvents << endl;
     if (doCleaningCuts) cout << cscFail << " events failed CSC check, out of " << nEntries << endl;
     return 0;
 }
