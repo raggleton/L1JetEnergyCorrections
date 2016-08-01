@@ -6,6 +6,6 @@ eval `scramv1 runtime -sh`
 cd /afs/cern.ch/user/t/taylor/CMSSW_8_0_9/src/L1Trigger/L1JetEnergyCorrections/bin/
 eval "scram b"
 
-totalCommand="RunMatcher -I $1 -O $2" 
+totalCommand="RunMatcherStage2L1Gen -I $1 -O $2" 
 eval $totalCommand
 # echo $totalCommand
