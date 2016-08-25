@@ -66,14 +66,14 @@ int main(int argc, char* argv[]) {
     // Reco jets
     TString refJetDirectory = opts.refJetDirectory();
     L1GenericTree<L1AnalysisRecoJetDataFormat> refJetTree(opts.inputFilename(),
-                                                          refJetDirectory+"/JetRecoTree",
+                                                          "l1JetRecoTree/JetRecoTree",
                                                           "Jet");
     L1AnalysisRecoJetDataFormat * refData = refJetTree.getData();
 
     // L1 jets
     TString l1JetDirectory = opts.l1JetDirectory();
     L1GenericTree<L1AnalysisL1UpgradeDataFormat> l1JetTree(opts.inputFilename(),
-                                                           l1JetDirectory+"/L1UpgradeTree",
+                                                           "l1UpgradeTree/L1UpgradeTree",
                                                            "L1Upgrade");
     L1AnalysisL1UpgradeDataFormat * l1Data = l1JetTree.getData();
 
@@ -322,22 +322,10 @@ int main(int argc, char* argv[]) {
             out_hfhMult = refData->hfhMult[rInd];
             out_hfemMult = refData->hfemMult[rInd];
 
-
-            if (fabs(out_eta) > 2.8 && (out_pt < (1.31 * (out_ptRef-140)))) {
-                outTree.Fill();
-                interstingEvents++;
-                cout << "Interesting event! (run " << out_run << " LS " << out_ls << " event " << out_event << ")" << endl;
-                std::string baseFilename = fs::path(opts.inputFilename()).stem().string();
-                std::string towerPlotname = "towerMap_run" + lexical_cast<std::string>(out_run)
-                                            + "_LS" + lexical_cast<std::string>(out_ls)
-                                            + "_evt" + lexical_cast<std::string>(out_event)
-                                            + "_" + baseFilename + ".pdf";
-                std::string title = "eta: " + lexical_cast<std::string>(out_eta)
-                                    + " phi: " + lexical_cast<std::string>(out_phi)
-                                    + " pt(L1): " + lexical_cast<std::string>(out_pt)
-                                    + " pt(RECO): " + lexical_cast<std::string>(out_ptRef);
-                makeTowerPlot(towerData, towerPlotname, title);
-            }
+            // hack on some cuts as to whether we should save for this matched pair
+            // we want to keep the final file size down
+            // if ( fabs(it.l1Jet().Eta())>3.00 ) // only look at forward jets
+            outTree.Fill();
         }
 
         // debugging plot - plots eta vs phi of jets

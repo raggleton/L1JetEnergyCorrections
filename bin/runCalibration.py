@@ -34,7 +34,10 @@ ROOT.TH1.SetDefaultSumw2(True)
 
 # definition of the response function to fit to get our correction function
 # MAKE SURE IT'S THE SAME ONE THAT IS USED IN THE EMULATOR
-central_fit = ROOT.TF1("fitfcn", "[0]+[1]/(pow(log10(x),2)+[2])+[3]*exp(-[4]*(log10(x)-[5])*(log10(x)-[5]))")
+central_fit_conventional = ROOT.TF1("fitfcn", "[0]+[1]/(pow(log10(x),2)+[2])+[3]*exp(-[4]*(log10(x)-[5])*(log10(x)-[5]))")
+central_fit_JetMet1 = ROOT.TF1("fitfcn", "[0]+[1]/(pow(log10(x),2)+[2])+[3]*exp(-([4]*(log10(x)-[5])*(log10(x)-[5])))+[6]*exp(-([7]*(log10(x)-[8])*(log10(x)-[8])))")
+central_fit_JetMetErr = ROOT.TF1("fitfcn", "[0]+[1]*TMath::Erf([2]*(log10(x)-[3])+[4]*exp([5]*(log10(x)-[6])*(log10(x)-[6])))")
+
 forward_fit = ROOT.TF1("fitfcn", "pol0")
 
 # Burr Type 3 distribution for response hist fitting
@@ -77,8 +80,22 @@ burr12_fit.SetParameter(4, 1.01)
 # Curve Fit defaults
 GCT_DEFAULT_PARAMS = [1, 5, 1, -25, 0.01, -20]
 STAGE1_DEFAULT_PARAMS = [1, 5, 1, -25, 0.01, -20]
-STAGE2_DEFAULT_PARAMS = [-0.5, 50, 1, -80, 0.01, -20]
-STAGE2_DEFAULT_PARAMS = [3.0, 35., 3, -200, 0.01, -20]
+# STAGE2_DEFAULT_PARAMS_ORIGINAL = [-0.5, 50, 1, -80, 0.01, -20]
+STAGE2_DEFAULT_PARAMS_CONVENTIONAL = [6.89, -252.79, 27.01, 4345.01, 0.01, -20.9794]
+STAGE2_DEFAULT_PARAMS_JETMET1 = [-11.64, -43.50, 1.19, 2190.7, 0, -19.51, -18.7426, 0.22, 0.98] # new jet met function has three more parameters
+STAGE2_DEFAULT_PARAMS_JETMETERR = [1.4036, -1398000, 0, 0.2249, 0, -2.926, 1.175] # other new jet met function, err func style (no idea what params should be)
+
+#######################################################
+# select which fit function and input parameters to use
+#######################################################
+# central_fit_select = central_fit_conventional
+# STAGE2_DEFAULT_PARAMS_SELECT = STAGE2_DEFAULT_PARAMS_CONVENTIONAL
+
+# central_fit_select = central_fit_JetMet1
+# STAGE2_DEFAULT_PARAMS_SELECT = STAGE2_DEFAULT_PARAMS_JETMET1
+
+central_fit_select = central_fit_JetMetErr
+STAGE2_DEFAULT_PARAMS_SELECT = STAGE2_DEFAULT_PARAMS_JETMETERR
 
 
 def set_fit_params(fitfunc, params):
@@ -461,8 +478,8 @@ def setup_fit(graph, function, absetamin, absetamax, outputfile):
         raise RuntimeError("graph in setup_fit() is empty")
 
     fit_max = max(xarr)  # Maxmimum pt for upper bound of fit
-    fit_min = 10 if absetamin > 2.9 else 10
-    # fit_min = min(xarr) # Minimum pt for lower bound of fit
+    # fit_min = 10 if absetamin > 2.9 else 10
+    fit_min = min(xarr) # Minimum pt for lower bound of fit
 
     # For lower bound of fit, use either fit_min or the pt
     # of the maximum correction value, whichever has the larger pT.
@@ -472,6 +489,7 @@ def setup_fit(graph, function, absetamin, absetamax, outputfile):
     # fit_min could correspond to a pT that isn't in the list of x-points)
     # Note that we want the maximum in the first half of the graph to avoid
     # the 'flick' at high pT in HF
+    # JOE EDIT: (un)comment the next 4 lines to (not) have the flick
     max_corr = max(yarr[:len(yarr) / 2])
     max_corr_ind = yarr.index(max_corr)
     max_corr_pt = xarr[max_corr_ind]
@@ -783,7 +801,7 @@ def main(in_args=sys.argv[1:]):
         # can cause fit failures
         default_params = []
         if args.stage2:
-            default_params = STAGE2_DEFAULT_PARAMS
+            default_params =STAGE2_DEFAULT_PARAMS_SELECT # this is selected around line 90
         elif args.stage1:
             default_params = STAGE1_DEFAULT_PARAMS
         elif args.gct:
@@ -794,7 +812,7 @@ def main(in_args=sys.argv[1:]):
             print "Inheriting params from last fit"
             default_params = previous_fit_params[:]
 
-        fitfunc = central_fit
+        fitfunc = central_fit_select # this is selected around line 90
         set_fit_params(fitfunc, default_params)
 
         # Actually do the graph making and/or fitting!

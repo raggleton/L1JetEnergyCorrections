@@ -22,6 +22,7 @@ def L1NtupleJEC_ON(process):
     # we dont want to change the calib mode if there is one specified, but
     # what if there isn't?
     L1NtupleJEC(process)
+    L1JEC_on(process)
     return process
 
 
@@ -98,4 +99,10 @@ def L1NtupleJEC(process):
 def L1JEC_off(process):
     """Turn Stage 2 JEC OFF"""
     process.caloStage2Params.jetCalibrationType = cms.string("None")
+    return process
+
+
+def L1JEC_on(process):
+    """Turn Stage 2 JEC ON"""
+    process.caloStage2Params.jetCalibrationType = cms.string("function8PtParams22EtaBins")
     return process

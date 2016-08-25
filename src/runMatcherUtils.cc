@@ -322,7 +322,7 @@ std::vector<TLorentzVector> getJetsForHTT(std::vector<TLorentzVector> jets) {
 
 
 bool passHTTCut(TLorentzVector jet) {
-    return (jet.Pt() > 35 && fabs(jet.Eta()) <= 3);
+    return (jet.Pt() > 30 && fabs(jet.Eta()) <= 3);
 }
 
 

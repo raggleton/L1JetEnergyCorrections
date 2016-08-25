@@ -64,5 +64,70 @@ samples = {
     "Express_Run2015D_v4_25ns": Dataset(inputDataset='/ExpressPhysics/Run2015D-Express-v4/FEVT',
                                         useParent=False, unitsPerJob=10, totalUnits=-1),
 
+    "ZeroBiasReReco_Run2015D_0" : Dataset(inputDataset='/ZeroBias/Run2015D-16Dec2015-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasReReco_Run2015D_1" : Dataset(inputDataset='/ZeroBias1/Run2015D-16Dec2015-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasReReco_Run2015D_2" : Dataset(inputDataset='/ZeroBias2/Run2015D-16Dec2015-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasReReco_Run2015D_3" : Dataset(inputDataset='/ZeroBias3/Run2015D-16Dec2015-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasReReco_Run2015D_4" : Dataset(inputDataset='/ZeroBias4/Run2015D-16Dec2015-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_1" :  Dataset(inputDataset='/ZeroBias1/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_2" :  Dataset(inputDataset='/ZeroBias2/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_3" :  Dataset(inputDataset='/ZeroBias3/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_4" :  Dataset(inputDataset='/ZeroBias4/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_5" :  Dataset(inputDataset='/ZeroBias5/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_6" :  Dataset(inputDataset='/ZeroBias6/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_7" :  Dataset(inputDataset='/ZeroBias7/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBias_com2016_8" :  Dataset(inputDataset='/ZeroBias8/Commissioning2016-PromptReco-v1/AOD',
+                                      useParent=True, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_1" :  Dataset(inputDataset='/ZeroBias1/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_2" :  Dataset(inputDataset='/ZeroBias2/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_3" :  Dataset(inputDataset='/ZeroBias3/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_4" :  Dataset(inputDataset='/ZeroBias4/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_5" :  Dataset(inputDataset='/ZeroBias5/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_6" :  Dataset(inputDataset='/ZeroBias6/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_7" :  Dataset(inputDataset='/ZeroBias7/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "ZeroBiasRaw_com2016_8" :  Dataset(inputDataset='/ZeroBias8/Commissioning2016-PromptReco-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1),
+
+    "MinimumBiasRaw_Run2016B" : Dataset(inputDataset='/MinimumBias/Run2016B-v1/RAW',
+                                      useParent=False, unitsPerJob=2, totalUnits=-1)
 
 }

@@ -21,8 +21,12 @@ config.Data.publication = False
 config.Data.inputDataset = ""  # your AOD/RECO dataset here
 config.Data.useParent = True  # for 2-file solution
 
+# select one of the below
 config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 1  # play around with this
+# config.Data.splitting = 'LumiBased'
+
+# this changes with the size of each
+config.Data.unitsPerJob = 1  
 
 # For processing DATA:
 # -------------------------------------------------

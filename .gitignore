@@ -1,4 +1,7 @@
 !crab/*.py
+*_cxx.d
+*_cxx.so
+*_cxx_ACLiC_dist_rdict.pcm
 *.aux
 *.condor
 *.d
@@ -49,3 +52,7 @@ crab_get_hadd_*
 dictionary*
 fileList*.py
 jobFiles
+.gitconfig
+PROOF
+GUI
+Aaron

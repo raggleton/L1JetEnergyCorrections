@@ -97,10 +97,10 @@ from L1Trigger.L1TNtuples.customiseL1Ntuple import L1NtupleAODEMU
 process = L1NtupleAODEMU(process)
 
 # Automatic addition of the customisation function from L1Trigger.L1JetEnergyCorrections.customiseL1JEC
-from L1Trigger.L1JetEnergyCorrections.customiseL1JEC import L1NtupleJEC_OFF 
+from L1Trigger.L1JetEnergyCorrections.customiseL1JEC import L1NtupleJEC 
 
 #call to customisation function L1NtupleJEC_OFF imported from L1Trigger.L1JetEnergyCorrections.customiseL1JEC
-process = L1NtupleJEC_OFF(process)
+process = L1NtupleJEC(process)
 
 # Automatic addition of the customisation function from L1Trigger.Configuration.customiseUtils
 from L1Trigger.Configuration.customiseUtils import L1TTurnOffUnpackStage2GtGmtAndCalo, L1TTurnOffGtAndGmtEmulation
@@ -108,7 +108,7 @@ from L1Trigger.Configuration.customiseUtils import L1TTurnOffUnpackStage2GtGmtAn
 #call to customisation function L1TTurnOffUnpackStage2GtGmtAndCalo imported from L1Trigger.Configuration.customiseUtils
 process = L1TTurnOffUnpackStage2GtGmtAndCalo(process)
 
-process = L1TTurnOffGtAndGmtEmulation(process)
+# process = L1TTurnOffGtAndGmtEmulation(process)
 
 # End of customisation functions
 
@@ -118,7 +118,10 @@ process.l1CustomReco.replace(process.ak4PFCHSL1FastL2L3ResidualCorrectorChain, p
 process.l1JetRecoTree.jecToken = 'ak4PFCHSL1FastL2L3Corrector'
 
 # Modify the jet seed threshold, default was 1.5
-jet_seed_threshold = 1.5
-process.caloStage2Params.jetSeedThreshold = cms.double(jet_seed_threshold)
+# jet_seed_threshold = 1.5
+# process.caloStage2Params.jetSeedThreshold = cms.double(jet_seed_threshold)
+
 # Set the NTuple filename
-process.TFileService.fileName = cms.string("L1Ntuple_Stage2_Fall15MC_HF_layer1_noL1Jec_%s_jst%s.root" % (process.GlobalTag.globaltag.value(), str(jet_seed_threshold).replace('.', 'p')))
+process.TFileService.fileName = cms.string("L1Ntuple.root")
+#process.TFileService.fileName = cms.string("L1Ntuple_Stage2_Fall15MC_HF_layer1_noL1Jec_%s_jst%s.root" % (process.GlobalTag.globaltag.value(), str(jet_seed_threshold).replace('.', 'p')))
+
