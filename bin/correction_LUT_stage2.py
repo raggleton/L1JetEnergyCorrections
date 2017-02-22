@@ -23,9 +23,35 @@ import common_utils as cu
 from collections import OrderedDict
 from bisect import bisect_left
 from multifunc import MultiFunc
-import matplotlib.pyplot as plt
-from binning import pairwise
+from binning import pairwise, eta_bin_colors
 from itertools import izip, ifilterfalse
+from math import ceil, floor
+from textwrap import wrap
+
+USE_MPL = True
+try:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap
+    from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, inset_axes, mark_inset
+    from matplotlib.ticker import MultipleLocator
+
+    mpl.rcParams['font.size'] = 18
+    print mpl.rcParams['figure.figsize']
+    mpl.rcParams['figure.figsize'] = (8.0, 8.0)  # default size of plots
+    mpl.rcParams['legend.scatterpoints'] = 1
+    mpl.rcParams['legend.numpoints'] = 1
+    mpl.rcParams['xtick.major.size'] = 12
+    mpl.rcParams['xtick.major.width'] = 2
+    mpl.rcParams['ytick.major.size'] = 12
+    mpl.rcParams['ytick.major.width'] = 2
+    mpl.rcParams['xtick.minor.size'] = 6
+    mpl.rcParams['xtick.minor.width'] = 1
+    mpl.rcParams['ytick.minor.size'] = 6
+    mpl.rcParams['ytick.minor.width'] = 1
+except ImportError:
+    print "Can't use matplotlib to make sanity plots"
+    print "Install it, or rewrite the plotting funcs in PyROOT"
 
 USE_SKLEARN = True
 try:
@@ -1117,7 +1143,14 @@ def print_map_info(map_info):
         print ' : '.join([str(map_info[k][i]) for k in keys])
 
 
-FMT = "png"
+FMT = "pdf"
+SIZE = 2
+TITLE_LENGTH = 80
+TITLE_Y = 0.95
+TITLE_FONTSIZE = 14
+distinct_colours = ['red', 'blue', 'green', 'orange', 'purple', 'limegreen',
+                    'dodgerblue', 'chocolate', 'magenta', 'goldenrod', 'teal',
+                    'salmon', 'grey', 'crimson', 'mediumslateblue', 'olive']
 
 def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
     """Plot map of pt (pre) -> pt (post), for original corrections,
@@ -1135,28 +1168,54 @@ def plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
-             'b-', label='Function', markersize=5, alpha=0.7, markeredgewidth=0)
+             'b-', label='Function', markersize=5, alpha=0.7, markeredgewidth=0, linewidth=2)
     plt.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
-             'g-', label='LUT', markersize=2, alpha=0.7, markeredgewidth=0)
-    plt.xlabel('Original pT [GeV]')
-    plt.ylabel('Post-Correction pT [GeV]')
-    plt.legend(loc=0)
+             'r-', label='LUT', markersize=2, alpha=0.7, markeredgewidth=0, linewidth=2)
+    plt.xlabel('Original '+r'$E_T$'+' [GeV]')
+    plt.ylabel('Post-Correction '+r'$E_T$'+' [GeV]')
     plt.minorticks_on()
-    plt.grid(which='both')
-    plt.suptitle(title)
-    plt.vlines(1023.5, *plt.ylim(), linestyle='dashed')
-    plt.hlines(1023.5, *plt.xlim(), linestyle='dashed')
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_%d.%s' % (eta_ind, FMT)))
+    plt.grid(which='major', linestyle='dashed')
+    tit = plt.suptitle("\n".join(wrap(title, TITLE_LENGTH)), y=TITLE_Y, fontsize=TITLE_FONTSIZE)
+    plt.vlines(1023.5, *plt.ylim(), linestyle='dotted', linewidth=2, color='green')
+    plt.hlines(1023.5, *plt.xlim(), label='Saturation '+r'$E_T$', linewidth=2, linestyle='dotted', color='green')
+    plt.legend(loc='upper left')
+    # plt.tight_layout()
 
-    plt.xlim(0, 150)
-    plt.ylim(0, 150)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_%d.%s' % (eta_ind, FMT)))
+    # make a nifty zoomedin region
+    ax = plt.gca()
+    zoom_range = (0, 100)
+    axins = zoomed_inset_axes(ax, 4, loc=4, borderpad=1.5)
+    axins.plot(map_info['pt_orig'], map_info['pt_post_corr_orig'],
+             'b-', label='Function', markersize=5, alpha=0.7, markeredgewidth=0, linewidth=2)
+    axins.plot(map_info['pt_orig'], map_info['pt_post_hw_corr_compressed'],
+             'r-', label='LUT', markersize=2, alpha=0.7, markeredgewidth=0, linewidth=2)
+    axins.set_xlim(zoom_range)
+    axins.set_ylim(zoom_range)
+    axins.xaxis.tick_top()
+    axins.tick_params(labelsize=14)
+    axins.xaxis.set_major_locator(MultipleLocator(25))
+    axins.yaxis.set_major_locator(MultipleLocator(25))
+    axins.grid(which='major')
+    pp, p1, p2 = mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="grey", lw=2)
+    # plt.xticks(visible=False)
+    # plt.yticks(visible=False)
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
+
+    axins.remove()
+    pp.remove()
+    p1.remove()
+    p2.remove()
+    ax.set_xlim(zoom_range)
+    ax.set_ylim(zoom_range)
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(5, 100)
     plt.ylim(5, 100)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_logX_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_zoomX_logX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.clf()
 
@@ -1176,11 +1235,12 @@ def plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir):
     plot_dir : str
         Where to save the plot
     """
-    cm = plt.cm.get_cmap('Set1')
+    distinct_cmap = ListedColormap(distinct_colours, N=len(set(map_info['pt_index'])))
     plt.scatter(map_info['pt_orig'], map_info['pt_post_corr_orig'],
-                c=map_info['pt_index'], linewidth=0, cmap=cm)
-    plt.xlabel('Original pT [GeV]')
-    plt.ylabel('Post-Correction pT [GeV]')
+                c=map_info['pt_index'], linewidth=0, cmap=distinct_cmap, s=25*SIZE)
+    plt.xlabel('Original '+r'$E_T$'+' [GeV]')
+    plt.ylabel('Post-Correction '+r'$E_T$'+' [GeV]')
+
     # plt.xlim(left=0)
     # plt.ylim(bottom=0)
     max_pt = 1024
@@ -1189,25 +1249,28 @@ def plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir):
 
     # plt.legend(loc=0)
     plt.minorticks_on()
-    plt.grid(which='both')
-    plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_%d.%s' % (eta_ind, FMT)))
+    plt.grid(which='major', linestyle='dashed')
+    tit = plt.suptitle("\n".join(wrap(title, TITLE_LENGTH)), y=TITLE_Y, fontsize=TITLE_FONTSIZE)
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(0, 150)
     plt.ylim(0, 150)
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(5, 100)
     plt.ylim(5, 100)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_logX_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'pt_pre_vs_post_clusters_zoomX_logX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.clf()
 
 
 def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
-    """Plot correction factor vs pT, for original corrections,
+    """Plot correction factor vs ET, for original corrections,
     compressed corrections, and HW correciton ints.
 
     Parameters
@@ -1222,32 +1285,36 @@ def plot_corr_vs_pt(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['pt_orig'], map_info['corr_orig'],
-             'bo', label='Function', markersize=5, alpha=0.7, markeredgewidth=0)
+             'bo', label='Function', markersize=5*SIZE, alpha=1, markeredgewidth=0)
     plt.plot(map_info['pt_orig'], map_info['hw_pt_post_hw_corr_compressed'] / (1. * map_info['hw_pt_orig']),
-             'gv', label='LUT', markersize=5, alpha=0.7, markeredgewidth=0)
-    plt.xlabel('Original pT [GeV]')
+             'v', label='LUT', markersize=5*SIZE, alpha=1, markeredgewidth=0, color='limegreen')
+    plt.xlabel('Original '+r'$E_T$'+' [GeV]')
     plt.ylabel('Correction')
+
     plt.ylim(0.5, 2.5)
     max_pt = 1024
     plt.xlim(0, max_pt)
     plt.legend(loc=0)
     plt.minorticks_on()
-    plt.grid(which='both')
-    plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_%d.%s' % (eta_ind, FMT)))
+    plt.grid(which='major', linestyle='dashed')
+    tit = plt.suptitle("\n".join(wrap(title, TITLE_LENGTH)), y=TITLE_Y, fontsize=TITLE_FONTSIZE)
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(0, 300)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(5, 300)
     plt.xscale('log')
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.clf()
 
 
 def plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir):
-    """Plot correction factor vs pT, for original corrections,
+    """Plot correction factor vs ET, for original corrections,
     compressed corrections, and HW correciton ints.
 
     Parameters
@@ -1261,25 +1328,28 @@ def plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir):
     plot_dir : str
         Where to save the plot
     """
-    cm = plt.cm.get_cmap('Set1')
+    distinct_cmap = ListedColormap(distinct_colours, N=len(set(map_info['pt_index'])))
     plt.scatter(map_info['pt_orig'], map_info['corr_orig'],
-                c=map_info['pt_index'], linewidth=0, cmap=cm)
-    plt.xlabel('Original pT [GeV]')
+                c=map_info['pt_index'], s=25*SIZE, linewidth=0, cmap=distinct_cmap)
+    plt.xlabel('Original '+r'$E_T$'+' [GeV]')
     plt.ylabel('Correction')
     plt.xlim(0, 1024)
     plt.ylim(0.5, 2.5)
     # plt.legend(loc=0)
     plt.minorticks_on()
-    plt.grid(which='both')
-    plt.suptitle(title)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_cluster_%d.%s' % (eta_ind, FMT)))
+    plt.grid(which='major', linestyle='dashed')
+    tit = plt.suptitle("\n".join(wrap(title, TITLE_LENGTH)), y=TITLE_Y, fontsize=TITLE_FONTSIZE)
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_cluster_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(0, 300)
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_cluster_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_cluster_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(5, 300)
     plt.xscale('log')
-    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.%s' % (eta_ind, FMT)))
+    # plt.tight_layout()
+    plt.savefig(os.path.join(plot_dir, 'corr_vs_pt_zoomX_logX_cluster_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.clf()
 
@@ -1299,27 +1369,48 @@ def plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir):
         Where to save the plot
     """
     plt.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x', label='LUT vs func')
-    plt.xlabel('LUT corrected HW pT')
-    plt.ylabel('Function corrected HW pT')
+    plt.xlabel('LUT corrected iET')
+    plt.ylabel('Function corrected iET')
     max_pt = 2048
     plt.xlim(0, max_pt)
     plt.ylim(0, max_pt)
-    plt.plot([0, max_pt], [0, max_pt], label='y = x')
+    plt.plot([0, max_pt], [0, max_pt], 'r', label='y = x', linewidth=2)
     plt.minorticks_on()
-    plt.grid(which='both')
-    plt.suptitle(title)
-    plt.legend(loc='best')
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.%s' % (eta_ind, FMT)))
+    plt.grid(which='major', linestyle='dashed')
+    tit = plt.suptitle("\n".join(wrap(title, TITLE_LENGTH)), y=TITLE_Y, fontsize=TITLE_FONTSIZE)
+    plt.legend(loc='upper left')
 
-    plt.xlim(0, 200)
-    plt.ylim(0, 200)
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_%d.%s' % (eta_ind, FMT)))
+    # make a nifty zoomedin region
+    ax = plt.gca()
+    zoom_range = (0, 200)
+    axins = zoomed_inset_axes(ax, 3.5, loc=4, borderpad=1.5)
+    axins.plot(map_info['hw_pt_post_hw_corr_compressed'], map_info['hw_pt_post_corr_orig'], 'x')
+    axins.plot(zoom_range, zoom_range, 'r', linewidth=2)
+    axins.set_xlim(zoom_range)
+    axins.set_ylim(zoom_range)
+    axins.xaxis.tick_top()
+    axins.tick_params(labelsize=14)
+    axins.xaxis.set_major_locator(MultipleLocator(50))
+    axins.yaxis.set_major_locator(MultipleLocator(50))
+    axins.grid(which='major')
+    pp, p1, p2 = mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="grey", lw=2)
+    # plt.xticks(visible=False)
+    # plt.yticks(visible=False)
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
+
+    axins.remove()
+    pp.remove()
+    p1.remove()
+    p2.remove()
+    ax.set_xlim(zoom_range)
+    ax.set_ylim(zoom_range)
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
 
     plt.xlim(1, 200)
     plt.ylim(1, 200)
     plt.xscale('log')
     plt.yscale('log')
-    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_logX_%d.%s' % (eta_ind, FMT)))
+    plt.savefig(os.path.join(plot_dir, 'lut_vs_func_zoomX_logX_%d.%s' % (eta_ind, FMT)), bbox_extra_artists=[tit])
     plt.clf()
 
 
