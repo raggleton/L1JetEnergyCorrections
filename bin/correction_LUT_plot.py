@@ -482,6 +482,7 @@ def main(in_args=sys.argv[1:]):
     parser.add_argument("--cpp", help="print ROOT C++ code to screen", action='store_true')
     parser.add_argument("--python", help="print PyROOT code to screen", action='store_true')
     parser.add_argument("--numpy", help="print numpy code to screen", action='store_true')
+    parser.add_argument("--ptCompressionFile", help="txt file with pT compression LUT", default=None)
     args = parser.parse_args(args=in_args)
 
     print args
@@ -562,10 +563,11 @@ def main(in_args=sys.argv[1:]):
                                    num_corr_bits=10,
                                    num_add_bits=8,
                                    plot_dir=out_dir,
-                                   read_pt_compression='lut_pt_compress.txt')
-                                   # target_num_pt_bins=2**4,
-                                   # merge_criterion=1.05,
-                                   # merge_algorithm='greedy')  # greedy or kmeans
+                                   # read_pt_compression='lut_pt_compress.txt'
+                                   read_pt_compression=args.ptCompressionFile,
+                                   target_num_pt_bins=2**4,
+                                   merge_criterion=1.05,
+                                   merge_algorithm='greedy')  # greedy or kmeans
         else:
             print_Stage2_func_file(fits, args.lut)
 
