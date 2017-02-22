@@ -446,7 +446,10 @@ def plot_all_functions(functions, filename, eta_bins, et_min=0, et_max=30):
             fit_func.SetRange(et_min, et_max)
         fit_func.SetTitle("%g - %g" % (eta_bins[i], eta_bins[i + 1]))
         fit_func.SetLineWidth(1)
-        fit_func.Draw(draw_range=[et_min, et_max])
+        if isinstance(fit_func, MultiFunc):
+            fit_func.Draw(draw_range=[et_min, et_max])
+        else:
+            fit_func.Draw()
         # corr_5 = fit_func.Eval(5)
         # vert_line.SetY1(-15)
         # vert_line.SetY2(15)
