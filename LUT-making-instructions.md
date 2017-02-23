@@ -89,7 +89,7 @@ What the `correction_LUT_plot.py` script does roughly is:
 
 - **ETA compression**: look in the `calo_ieta_to_index()` method of [`bin/correction_LUT_stage2.py`](bin/correction_LUT_stage2.py)
 
-- **PT compression**: you can either calculate a new "optimum" PT compression (using the correction functions), or use an existing human-readable PT compression LUT. To do the latter, use the `--ptCompressionFile` option.
+- **PT compression**: you can either calculate a new "optimum" PT compression (using the correction functions), or use an existing human-readable PT compression LUT. To do the latter, use the `--ptCompressionFile` option. The current LUT is here: [https://github.com/cms-l1t-offline/L1Trigger-L1TCalorimeter/blob/master/lut_pt_compress.txt](https://github.com/cms-l1t-offline/L1Trigger-L1TCalorimeter/blob/master/lut_pt_compress.txt).
 **NB** if the number of possible PT indices changes from 2^4, you **must** update this in the code here
 
 - **Addend/multiplier**:
