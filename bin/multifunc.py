@@ -41,14 +41,14 @@ class MultiFunc(object):
             raise RuntimeError('x is beyond the limit of your MultiFunc range')
         return [func for lim, func in self.functions_dict.iteritems() if lim[0] <= x < lim[1]][0].Eval(x)
 
-    def Draw(self, draw_range=None, draw_args=None):
+    def Draw(self, draw_args=None, draw_range=None):
         """Draw the complete function.
 
+        draw_args : str
+            args to be passed of TF1.Draw()
         draw_range : list[float, float]
             x range to draw function over. if None, will draw over
             whole range of functions specified.
-        draw_args : str
-            args to be passed of TF1.Draw()
         """
         if not draw_range:
             draw_range = [-np.inf, np.inf]
@@ -66,6 +66,8 @@ class MultiFunc(object):
                 upper_lim = draw_range[1]
 
             title = self.functions_dict.values()[0].GetTitle()
+            if title is None:
+                title = ""
             blank = ROOT.TF1("blank" + str(np.random.randint(0, 10000)), title, lower_lim, upper_lim)
             blank.Draw()
             max_value = max([func.GetMaximum(lim[0], lim[1])
