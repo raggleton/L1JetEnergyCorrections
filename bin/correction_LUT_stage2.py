@@ -827,10 +827,10 @@ def calo_ieta_to_index(ieta):
         raise IndexError("You cannot have ieta > 41!")
     ieta = abs(ieta)
     # The old "region binning":
-    # if ieta <= 29:  # HBHE
-    #     return int(ceil(ieta / 4.)) - 1
-    # else:  # HF
-    #     return int(ceil((ieta - 29) / 3.)) + 6
+    if ieta <= 29:  # HBHE
+        return int(ceil(ieta / 4.)) - 1
+    else:  # HF
+        return int(ceil((ieta - 29) / 3.)) + 6
 
     # Joe's new binning:
     ieta_bins = [
