@@ -25,6 +25,7 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPalette(55)
 
 
+<<<<<<< HEAD
 # a set of 11 varying colours
 colors = [ROOT.kRed, ROOT.kBlue, ROOT.kBlack, ROOT.kGreen+2, ROOT.kMagenta,
           ROOT.kOrange+7, ROOT.kAzure+1, ROOT.kRed+3, ROOT.kViolet+1,
@@ -60,7 +61,6 @@ def compare_PU_by_eta_bins(graphs, title, oDir, ylim=None, lowpt_zoom=True):
     lowpt_zoom : bool, optional
         Zoom in on low pt range
     """
-
     cu.check_dir_exists_create(oDir)
     for i, (eta_min, eta_max) in enumerate(pairwise(binning.eta_bins)):
         rename_dict = dict(eta_min=eta_min, eta_max=eta_max)
@@ -219,6 +219,8 @@ def compare():
     # Plot different PU scenarios for given eta bin
     # --------------------------------------------------------------------
     graphs = [
+        # Contribution(file_name=f_0PU_new, obj_name=corr_eta_graph_name,
+        #              label="0PU", line_color=colors[0], marker_color=colors[0]),
         Contribution(file_name=f_PU0to10_new, obj_name=corr_eta_graph_name,
                      label="PU: 0 - 10", line_color=colors[1], marker_color=colors[1]),
         Contribution(file_name=f_PU15to25_new, obj_name=corr_eta_graph_name,
@@ -229,6 +231,7 @@ def compare():
     title = "Fall15 MC, no JEC, new layer 1 calibs, #DeltaR < 0.4, {eta_min:g} < |#eta^{{L1}}| < {eta_max:g}"
     compare_PU_by_eta_bins(graphs, title, os.path.join(s2_new, 'comparePU'), lowpt_zoom=True)
 
+    """
     # The different dR/ptRef combinations:
     graphs = [
         Contribution(file_name=f_PU0to10_new_ref5, obj_name=corr_eta_graph_name,
@@ -324,7 +327,7 @@ def compare():
     ]
     title = "Fall15 MC, no JEC, Stage 2, {eta_min:g} < |#eta| < {eta_max:g}"
     compare_by_eta_pu_bins([new_graphs, old_graphs], 'new_old_layer1', pu_labels, title, os.path.join(s2_new, 'new_old_layer1'))
-
+    """
 
 
 if __name__ == "__main__":

@@ -10,6 +10,9 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TRegexp.h"
+#include "TCanvas.h"
+#include "TH2.h"
+#include "TH1.h"
 
 // BOOST headers
 #include <boost/algorithm/string.hpp>
@@ -19,6 +22,8 @@
 // Headers from this package
 #include "commonRootUtils.h"
 
+using std::cout;
+using std::endl;
 using boost::lexical_cast;
 
 template<typename T>
@@ -253,15 +258,30 @@ template<typename T>
 int findRecoJetIndex(T et, T eta, T phi, const L1AnalysisRecoJetDataFormat & jets) {
     for (unsigned i = 0; i < jets.nJets; ++i){
         // match two floating-point numbers: use range of acceptibility rather than ==
-        if (fabs(jets.etCorr[i] - et) < 0.01
-            && fabs(jets.eta[i] - eta) < 0.01
-            && fabs(jets.phi[i] - phi) < 0.01)
+        if (fabs(jets.etCorr[i] - et) < 0.001
+            && fabs(jets.eta[i] - eta) < 0.001
+            && fabs(jets.phi[i] - phi) < 0.001)
             return i;
     }
     return -1;
 }
 template int findRecoJetIndex(float et, float eta, float phi, const L1AnalysisRecoJetDataFormat & jets);
 template int findRecoJetIndex(double et, double eta, double phi, const L1AnalysisRecoJetDataFormat & jets);
+
+
+template<typename T>
+int findL1JetIndex(T et, T eta, T phi, const L1AnalysisL1UpgradeDataFormat & jets) {
+    for (unsigned i = 0; i < jets.nJets; ++i){
+        // match two floating-point numbers: use range of acceptibility rather than ==
+        if (fabs(jets.jetEt[i] - et) < 0.001
+            && fabs(jets.jetEta[i] - eta) < 0.001
+            && fabs(jets.jetPhi[i] - phi) < 0.001)
+            return i;
+    }
+    return -1;
+}
+template int findL1JetIndex(float et, float eta, float phi, const L1AnalysisL1UpgradeDataFormat & jets);
+template int findL1JetIndex(double et, double eta, double phi, const L1AnalysisL1UpgradeDataFormat & jets);
 
 
 bool checkTriggerFired(const std::vector<TString> & hlt, const std::string & selection) {
@@ -302,5 +322,65 @@ std::vector<TLorentzVector> getJetsForHTT(std::vector<TLorentzVector> jets) {
 
 
 bool passHTTCut(TLorentzVector jet) {
-    return (jet.Pt() > 35 && fabs(jet.Eta()) <= 3);
+    return (jet.Pt() > 30 && fabs(jet.Eta()) <= 3);
+}
+
+
+std::pair<float,float> towerEtaBounds(int ieta)
+{
+  if(ieta==0) ieta = 1;
+  if(ieta>kHFEnd) ieta = kHFEnd;
+  if(ieta<(-1*kHFEnd)) ieta = -1*kHFEnd;
+  //const float towerEtas[33] = {0,0.087,0.174,0.261,0.348,0.435,0.522,0.609,0.696,0.783,0.870,0.957,1.044,1.131,1.218,1.305,1.392,1.479,1.566,1.653,1.740,1.830,1.930,2.043,2.172,2.322,2.5,2.650,3.000,3.5,4.0,4.5,5.0};
+
+  return std::make_pair( towerEtas[abs(ieta)-1],towerEtas[abs(ieta)] );
+}
+
+
+float towerEtaSize(int ieta)
+{
+  std::pair<float,float> bounds = towerEtaBounds(ieta);
+  float size = (bounds.second-bounds.first);
+  return size;
+}
+
+
+float towerPhiSize(int ieta)
+{
+  return 2.*M_PI/kNPhi;
+}
+
+
+float towerEta(int ieta)
+{
+  std::pair<float,float> bounds = towerEtaBounds(ieta);
+  float eta = (bounds.second+bounds.first)/2.;
+  float sign = ieta>0 ? 1. : -1.;
+  return sign*eta;
+}
+
+
+float towerPhi(int ieta, int iphi)
+{
+  float phi = (float(iphi)-0.5)*towerPhiSize(ieta);
+  if (phi > M_PI) phi = phi - (2*M_PI);
+  return phi;
+}
+
+
+void makeTowerPlot(L1AnalysisL1CaloTowerDataFormat * towerData, std::string towerPlotname, std::string title) {
+    TCanvas c("c", "", 800, 600);
+    c.SetTicks(1, 1);
+    TH2F h("h", (title+";ieta;iphi").c_str(), 85, -42, 43, 73, 0, 73);
+    if (towerData->ieta.size() == 0) {
+        cout << "Nothing in tower vectors, not printing map" << endl;
+        return;
+    }
+    for (unsigned i = 0; i < towerData->ieta.size(); i++) {
+        h.Fill(towerData->ieta[i], towerData->iphi[i], towerData->iet[i]);
+    }
+    h.Draw("COLZ TEXT");
+    h.SetMarkerSize(0.25);
+    c.SaveAs(towerPlotname.c_str());
+
 }

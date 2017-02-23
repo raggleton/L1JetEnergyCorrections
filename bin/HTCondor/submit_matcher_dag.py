@@ -54,15 +54,17 @@ NTUPLE_DIRS = [
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/QCDFlatFall15NoPU',
-    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/QCDFlatFall15NoPU',
+    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/QCDFlatFall15NoPU',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
-    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw',
+    # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/QCDFlatFall15PU0to50NzshcalRaw',
     # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/QCDFlatFall15PU0to50NzshcalRaw',
-    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/QCDFlatFall15NoPU/',
-    '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/QCDFlatFall15PU0to50NzshcalRaw/'
+    # '/hdfs/L1JEC/CMSSW_8_0_7/L1JetEnergyCorrections/QCDFlatFall15PU0to50NzshcalRaw_genEmu_23May_jbntuples/QCDFlatFall15PU0to50NzshcalRaw',
+    # '/hdfs/L1JEC/CMSSW_8_0_7/L1JetEnergyCorrections/QCDFlatFall15NoPU_genEmu_23May_jbntuples/QCDFlatFall15NoPU',
+    # '/hdfs/L1JEC/CMSSW_8_0_9/QCDFlatFall15PU0to50NzshcalRaw_genEmu_30June2016_809v70_noJEC_893ca/QCDFlatFall15PU0to50NzshcalRaw',
+    '/hdfs/L1JEC/CMSSW_8_0_9/QCDFlatFall15NoPU_genEmu_30June2016_809v70_noJEC_893ca/QCDFlatFall15NoPU',
 ]
 
 # Pick one
@@ -79,8 +81,8 @@ if SAMPLE.startswith("MC"):
         raise RuntimeError('SAMPLE set incorrectly')
     EXE = 'RunMatcherStage2%s%s' % (parts[1], parts[2])
 
-# DeltaR(L1, RefJet) for matching
-DELTA_R = 0.4
+# DeltaR(L1, RefJet) for matching (typically a value between 0.2<->0.4)
+DELTA_R = 0.25
 
 # Minimum pt cut on reference jets
 PT_REF_MIN = 10
@@ -97,7 +99,6 @@ elif SAMPLE == "DATA":
 REF_DIR = 'l1JetRecoTree'
 if SAMPLE.startswith('MC'):
     if SAMPLE.endswith('Gen'):
-        # REF_DIR = 'l1ExtraTreeGenAk4'
         REF_DIR = 'l1GeneratorTree'
     elif SAMPLE.endswith('PF'):
         REF_DIR = 'l1JetRecoTree'
@@ -112,9 +113,9 @@ CLEANING_CUT = None  # MC
 # String to append to output ROOT filename
 # Note that the things in {} get formatted out later, see below
 # Bit of dodgy magic
-APPEND = 'MP_ak4_ref%sto5000_l10to5000_dr%s' % (str(PT_REF_MIN).replace('.', 'p'), str(DELTA_R).replace('.', 'p'))  # MPjets - MC
+# APPEND = 'MP_ak4_ref%sto5000_l10to5000_dr%s' % (str(PT_REF_MIN).replace('.', 'p'), str(DELTA_R).replace('.', 'p'))  # MPjets - MC
 # APPEND = 'MP_ak4_ref10to5000_l130to5000_dr%s_httL1Jets_allGenJets_MHT' % (str(DELTA_R).replace('.', 'p'))  # MPjets - MC
-# APPEND = 'ak4_ref%dto5000_l10to5000_dr%s' % (PT_REF_MIN, str(DELTA_R).replace('.', 'p'))  # Demux jets - data
+APPEND = 'ak4_ref%dto5000_l10to5000_dr%s' % (PT_REF_MIN, str(DELTA_R).replace('.', 'p'))  # Demux jets - data
 # APPEND = 'ak4_Gen%dto5000_PF0to5000_dr%s_noCleaning' % (PT_REF_MIN, str(DELTA_R).replace('.', 'p'))  # for PFGen exe
 # APPEND = 'MP_ak4_PF%dto5000_l10to5000_dr%s_noCleaning' % (PT_REF_MIN, str(DELTA_R).replace('.', 'p'))  # for L1PF exe
 

@@ -24,7 +24,7 @@ ROOT.gErrorIgnoreLevel = ROOT.kWarning
 
 
 # Update me if necessary!
-AUTHOR = 'Robin Aggleton'
+AUTHOR = 'Joe Taylor'
 
 
 def plot_to_file(f, plotname, filename, xtitle="", ytitle="", title="",
@@ -178,7 +178,7 @@ def plot_corr_results(in_name):
             plotname = "l1corr_eta_%g_%g" % (eta_min, eta_max)
             bin_title = "%g <  |\eta^{L1}| < %g" % (eta_min, eta_max)
             xtitle = "<p_{T}^{L1}> [GeV]"
-            ytitle = "Correction = 1/#langle p_{T}^{L1}/p_{T}^{Ref}#rangle"
+            ytitle = "Correction = 1/<p_{T}^{L1}/p_{T}^{Ref}>"
             output_plots = [os.path.join(odir, plotname + ext) for ext in ['.tex', '.pdf']]
             if plot_to_file(input_file, plotname, output_plots,
                             xtitle=xtitle, ytitle=ytitle, title="",

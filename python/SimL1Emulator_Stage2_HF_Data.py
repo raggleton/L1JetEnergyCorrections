@@ -26,8 +26,9 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/data/Run2015D/DoubleEG/RAW-RECO/ZElectron-PromptReco-v4/000/260/627/00000/12455212-1E85-E511-8913-02163E014472.root'),
-    secondaryFileNames = cms.untracked.vstring()
+    fileNames = cms.untracked.vstring('/store/data/Commissioning2016/ZeroBias2/AOD/PromptReco-v1/000/268/955/00000/36CC36F5-3900-E611-81A7-02163E0133A2.root'),
+    secondaryFileNames = cms.untracked.vstring('/store/data/Commissioning2016/ZeroBias2/RAW/v1/000/268/955/00000/06B47904-E2FD-E511-9C11-02163E013437.root', 
+    											'/store/data/Commissioning2016/ZeroBias2/RAW/v1/000/268/955/00000/10B613AA-E1FD-E511-B37E-02163E01459C.root')
 )
 
 process.options = cms.untracked.PSet(
@@ -80,19 +81,26 @@ from L1Trigger.Configuration.customiseUtils import L1TTurnOffUnpackStage2GtGmtAn
 process = L1TTurnOffUnpackStage2GtGmtAndCalo(process)
 
 #call to customisation function L1TTurnOffGtAndGmtEmulation imported from L1Trigger.Configuration.customiseUtils
-process = L1TTurnOffGtAndGmtEmulation(process)
+# process = L1TTurnOffGtAndGmtEmulation(process)
 
 # Automatic addition of the customisation function from L1Trigger.L1JetEnergyCorrections.customiseL1JEC
-# from L1Trigger.L1JetEnergyCorrections.customiseL1JEC import L1JEC_off
+# from L1Trigger.L1JetEnergyCorrections.customiseL1JEC import L1JEC_on
 
 #call to customisation function L1JEC_off imported from L1Trigger.L1JetEnergyCorrections.customiseL1JEC
-# process = L1JEC_off(process)
+# process = L1JEC_on(process)
 
 # End of customisation functions
-process.TFileService.fileName = cms.string("L1Ntuple_Stage2_ReReco_HF_integration-v9_dummyLayer1_L1Jec_Fall15V2.root")
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 200
 process.MessageLogger.suppressWarning = cms.untracked.vstring(
        "l1UpgradeEmuTree",
        "l1CaloTowerEmuTree"
        )
+
+# Modify the jet seed threshold, default was 1.5
+# jet_seed_threshold = 6
+# process.caloStage2Params.jetSeedThreshold = cms.double(jet_seed_threshold)
+
+# Set the NTuple filename
+process.TFileService.fileName = cms.string("L1Ntuple.root")
+# process.TFileService.fileName = cms.string("L1Ntuple_Stage2_ReReco_HF_noL1Jec_%s_jst%s.root" % (process.GlobalTag.globaltag.value(), str(jet_seed_threshold).replace('.', 'p')))

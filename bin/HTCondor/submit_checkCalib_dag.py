@@ -49,37 +49,35 @@ PAIRS_FILES = [
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
+# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
+# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst2_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst3_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
 # '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst4_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC.root',
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_fall15JEC_leadingGenOnly_cenOnly.root',
-'/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/pairs/pairs_QCDFlatFall15NoPU_MP_ak4_ref10to5000_l10to5000_dr0p4_spring15JEC.root'
-# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_1Apr_int-v14_dummyLayer1_L1JECSpring15_jst1p5_RAWONLY/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4_spring15JEC.root'
+# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst6_RAWONLY_v2/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
+# '/hdfs/L1JEC/CMSSW_8_0_2/L1JetEnergyCorrections/Stage2_HF_QCDFall15_16Mar_int-v14_layer1_noL1JEC_jst5_RAWONLY_v2/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_MP_ak4_ref10to5000_l10to5000_dr0p4.root',
+# '/hdfs/L1JEC/CMSSW_8_0_7/L1JetEnergyCorrections/QCDFlatFall15PU0to50NzshcalRaw_genEmu_23May_jbntuples/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_ak4_ref10to5000_l10to5000_dr0p4.root',
+# '/hdfs/L1JEC/CMSSW_8_0_7/L1JetEnergyCorrections/QCDFlatFall15PU0to50NzshcalRaw_genEmu_23May_jbntuples/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_ak4_ref10to5000_l10to5000_dr0p25.root',
+# '/hdfs/L1JEC/CMSSW_8_0_7/L1JetEnergyCorrections/QCDFlatFall15NoPU_genEmu_23May_jbntuples/pairs/pairs_QCDFlatFall15NoPU_ak4_ref10to5000_l10to5000_dr0p25.root',
+'/hdfs/L1JEC/CMSSW_8_0_9/QCDFlatFall15PU0to50NzshcalRaw_genEmu_30June2016_809v70_noJEC_893ca/pairs/pairs_QCDFlatFall15PU0to50NzshcalRaw_ak4_ref10to5000_l10to5000_dr0p25.root',
 ]
 
 # Maximum L1 pt to be included in plots (to avoid saturation effects)
 MAX_L1_PT = 1022
 
-# Select eta bins to run over
+# ETA bins
 ETA_BINS = binning.eta_bins
+etaBinsLabel = binning.eta_bins_label
 
 # Select PU bins to run over
-PU_BINS = None  # None if you don't want to cut on PU
-# PU_BINS = binning.pu_bins
+# PU_BINS = None  # None if you don't want to cut on PU
+PU_BINS = binning.pu_bins
 # PU_BINS = binning.pu_bins_lower # run260627 lower PU overall
 
 # String to append to output ROOT filename, depending on PU
 # Note that the things in {} get formatted out later, see below
 # Bit of dodgy magic
-APPEND = "_PU{puMin}to{puMax}_maxPt{maxL1Pt}" if PU_BINS else "_maxPt{maxL1Pt}"
+APPEND = etaBinsLabel + "_PU{puMin}to{puMax}_maxPt{maxL1Pt}" if PU_BINS else etaBinsLabel + "_maxPt{maxL1Pt}"
 
 # Directory for logs (should be on /storage)
 # Will be created automatically by htcondenser

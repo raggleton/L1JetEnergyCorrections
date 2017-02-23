@@ -22,6 +22,7 @@
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisGeneratorDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisL1UpgradeDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisRecoVertexDataFormat.h"
+#include "L1Trigger/L1TNtuples/interface/L1AnalysisGeneratorDataFormat.h"
 
 // Headers from this package
 #include "DeltaR_Matcher.h"
@@ -39,6 +40,7 @@ using L1Analysis::L1AnalysisL1ExtraDataFormat;
 using L1Analysis::L1AnalysisGeneratorDataFormat;
 using L1Analysis::L1AnalysisL1UpgradeDataFormat;
 using L1Analysis::L1AnalysisRecoVertexDataFormat;
+using L1Analysis::L1AnalysisGeneratorDataFormat;
 using boost::lexical_cast;
 
 namespace fs = boost::filesystem;
@@ -73,7 +75,6 @@ int main(int argc, char* argv[]) {
                                                            l1JetDirectory+"/L1UpgradeTree",
                                                            "L1Upgrade");
     L1AnalysisL1UpgradeDataFormat * l1Data = l1JetTree.getData();
-
 
     // hold Event tree
     L1GenericTree<L1AnalysisEventDataFormat> eventTree(opts.inputFilename(),

@@ -11,8 +11,12 @@
 
 // L1T headers
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisRecoJetDataFormat.h"
+#include "L1Trigger/L1TNtuples/interface/L1AnalysisL1UpgradeDataFormat.h"
+#include "L1Trigger/L1TNtuples/interface/L1AnalysisL1CaloTowerDataFormat.h"
 
 using L1Analysis::L1AnalysisRecoJetDataFormat;
+using L1Analysis::L1AnalysisL1UpgradeDataFormat;
+using L1Analysis::L1AnalysisL1CaloTowerDataFormat;
 
 
 /**
@@ -155,6 +159,20 @@ int findRecoJetIndex(T et, T eta, T phi, const L1AnalysisRecoJetDataFormat & jet
 
 
 /**
+ * @brief Get index of jet in collection matching et/eta/phi
+ * @details If not found, returns -1
+ *
+ * @param et [description]
+ * @param eta [description]
+ * @param phi [description]
+ * @param jets [description]
+ * @return [description]
+ */
+template<typename T>
+int findL1JetIndex(T et, T eta, T phi, const L1AnalysisL1UpgradeDataFormat & jets);
+
+
+/**
  * @brief Check if a certain trigger was fired.
  * @details Note, only checks to see if it was fired,
  * not if it was the *only* trigger that was fired.
@@ -203,5 +221,30 @@ std::vector<TLorentzVector> getJetsForHTT(std::vector<TLorentzVector> jets);
  * @return [description]
  */
 bool passHTTCut(TLorentzVector jet);
+
+static const int kHBHEEnd=28;
+static const int kHFBegin=29;
+static const int kHFEnd=41;
+static const int kHFPhiSeg=1;  // to be deprecated!
+static const int kHFNrPhi=72/kHFPhiSeg;  // to be deprecated!
+static const int kHBHENrPhi=72;  // to be deprecated!
+static const int kNPhi=72;
+static const int kNrTowers = ((kHFEnd-kHFBegin+1)*kHFNrPhi + kHBHEEnd*kHBHENrPhi )*2;
+static const int kNrHBHETowers = kHBHEEnd*kHBHENrPhi*2;
+const float kGTEtaLSB = 0.0435;
+const float kGTPhiLSB = 0.0435;
+const float towerEtas[42] = {0,0.087,0.174,0.261,0.348,0.435,0.522,0.609,0.696,0.783,0.870,0.957,1.044,1.131,1.218,1.305,1.392,1.479,1.566,1.653,1.740,1.830,1.930,2.043,2.172,2.322,2.5,2.650,2.853,3.139,3.314,3.489,3.664,3.839,4.013,4.191,4.363,4.538,4.716,4.889,5.191,5.191};
+
+std::pair<float,float> towerEtaBounds(int ieta);
+
+float towerEtaSize(int ieta);
+
+float towerPhiSize(int ieta);
+
+float towerEta(int ieta);
+
+float towerPhi(int ieta, int iphi);
+
+void makeTowerPlot(L1AnalysisL1CaloTowerDataFormat * towerData, std::string towerPlotname, std::string title);
 
 #endif

@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TStyle.h"
 
 // BOOST headers
 #include <boost/filesystem.hpp>
@@ -20,6 +21,7 @@
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisL1ExtraDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisRecoMetFilterDataFormat.h"
 #include "L1Trigger/L1TNtuples/interface/L1AnalysisRecoVertexDataFormat.h"
+#include "L1Trigger/L1TNtuples/interface/L1AnalysisL1CaloTowerDataFormat.h"
 
 // Headers from this package
 #include "DeltaR_Matcher.h"
@@ -37,8 +39,10 @@ using L1Analysis::L1AnalysisL1UpgradeDataFormat;
 using L1Analysis::L1AnalysisL1ExtraDataFormat;
 using L1Analysis::L1AnalysisRecoMetFilterDataFormat;
 using L1Analysis::L1AnalysisRecoVertexDataFormat;
+using L1Analysis::L1AnalysisL1CaloTowerDataFormat;
 using boost::lexical_cast;
 namespace fs = boost::filesystem;
+
 
 /**
  * @brief
@@ -48,6 +52,7 @@ namespace fs = boost::filesystem;
  * @author Robin Aggleton, Nov 2015
  */
 int main(int argc, char* argv[]) {
+    gStyle->SetOptStat(0);
 
     cout << "Running Matcher for data" << std::endl;
 
@@ -61,14 +66,14 @@ int main(int argc, char* argv[]) {
     // Reco jets
     TString refJetDirectory = opts.refJetDirectory();
     L1GenericTree<L1AnalysisRecoJetDataFormat> refJetTree(opts.inputFilename(),
-                                                          refJetDirectory+"/JetRecoTree",
+                                                          "l1JetRecoTree/JetRecoTree",
                                                           "Jet");
     L1AnalysisRecoJetDataFormat * refData = refJetTree.getData();
 
     // L1 jets
     TString l1JetDirectory = opts.l1JetDirectory();
     L1GenericTree<L1AnalysisL1UpgradeDataFormat> l1JetTree(opts.inputFilename(),
-                                                           l1JetDirectory+"/L1UpgradeTree",
+                                                           "l1UpgradeTree/L1UpgradeTree",
                                                            "L1Upgrade");
     L1AnalysisL1UpgradeDataFormat * l1Data = l1JetTree.getData();
 
@@ -90,6 +95,18 @@ int main(int argc, char* argv[]) {
                                                               "l1RecoTree/RecoTree",
                                                                "Vertex");
     L1AnalysisRecoVertexDataFormat * recoVtxData = recoVtxTree.getData();
+
+    // hold tower info
+    L1GenericTree<L1AnalysisL1CaloTowerDataFormat> towerTree(opts.inputFilename(),
+                                                             "l1CaloTowerTree/L1CaloTowerTree",
+                                                             "L1CaloTower");
+    L1AnalysisL1CaloTowerDataFormat * towerData = towerTree.getData();
+
+    // TChain * towerTree = new TChain("l1CaloTowerTree/L1CaloTowerTree");
+    // L1AnalysisL1CaloTowerDataFormat * towerData = new L1AnalysisL1CaloTowerDataFormat();
+    // towerTree->AddFile(opts.inputFilename().c_str(), -1);
+    // towerTree->SetBranchAddress("L1CaloTower", &towerData);
+    // cout << towerData << endl;
 
     // input filename stem (no .root)
     fs::path inPath(opts.inputFilename());
@@ -113,11 +130,14 @@ int main(int argc, char* argv[]) {
     TTree outTree("valid", "valid");
     // Quantities for L1 jets:
     float out_pt(-1.), out_eta(99.), out_phi(99.);
+    int out_ieta(999), out_iphi(999);
     int out_nL1(-1); // number of jets in the event,
     outTree.Branch("pt", &out_pt, "pt/F");
     outTree.Branch("eta", &out_eta, "eta/F");
     outTree.Branch("phi", &out_phi, "phi/F");
     outTree.Branch("nL1", &out_nL1, "nL1/I");
+    outTree.Branch("ieta", &out_ieta, "ieta/I");
+    outTree.Branch("ophi", &out_iphi, "iphi/I");
     // Quantities for reference jets (GenJet, etc):
     float out_ptRef(-1.), out_etaRef(99.), out_phiRef(99.);
     int out_nRef(-1);
@@ -143,18 +163,15 @@ int main(int argc, char* argv[]) {
     outTree.Branch("hfhMult", &out_hfhMult, "hfhMult/S");
     outTree.Branch("hfemMult", &out_hfemMult, "hfemMult/S");
     // Quantities to describe relationship between the two:
-    float out_rsp(-1.), out_rsp_inv(-1.);
+    float out_rsp(-1.);
     float out_dr(99.), out_deta(99.), out_dphi(99.);
-    float out_ptDiff(99999.), out_resL1(99.), out_resRef(99.);
+    float out_ptDiff(99999.);
     int out_nMatches(0);
     outTree.Branch("ptDiff", &out_ptDiff, "ptDiff/F"); // L1 - Ref
     outTree.Branch("rsp", &out_rsp, "rsp/F"); // response = l1 pT/ ref jet pT
-    outTree.Branch("rsp_inv", &out_rsp_inv, "rsp_inv/F"); // response = ref pT/ l1 jet pT
     outTree.Branch("dr", &out_dr, "dr/F");
     outTree.Branch("deta", &out_deta, "deta/F");
     outTree.Branch("dphi", &out_dphi, "dphi/F");
-    outTree.Branch("resL1", &out_resL1, "resL1/F"); // resolution = L1 - Ref / L1
-    outTree.Branch("resRef", &out_resRef, "resRef/F"); // resolution = L1 - Ref / Ref
     outTree.Branch("nMatches", &out_nMatches, "nMatches/Int_t");
 
     // PU quantities
@@ -163,26 +180,12 @@ int main(int argc, char* argv[]) {
     outTree.Branch("numPUVertices", &out_numPUVertices, "numPUVertices/F");
 
     // Event info
+    unsigned out_run(0);
     ULong64_t out_event(0);
     int out_ls(0);
+    outTree.Branch("run", &out_run, "run/i");
     outTree.Branch("event", &out_event, "event/l");
     outTree.Branch("LS", &out_ls, "ls/I");
-
-    // triggers
-    // bool out_HLT_ZeroBias(true), out_HLT_IsoMu(true), out_HLT_DiMu(true), out_HLT_DiEl(true);
-    // bool out_HLT_Physics(true), out_HLT_Random(true), out_HLT_Photon(true), out_HLT_Mu(true);
-    // bool out_HLT_MET(true), out_HLT_PFMET(true), out_HLT_HT(true);
-    // outTree.Branch("hlt_zeroBias", &out_HLT_ZeroBias, "hlt_zeroBias/Bool_t");
-    // outTree.Branch("hlt_isoMu", &out_HLT_IsoMu, "hlt_isoMu/Bool_t");
-    // outTree.Branch("hlt_diMu", &out_HLT_DiMu, "hlt_diMu/Bool_t");
-    // outTree.Branch("hlt_diEl", &out_HLT_DiEl, "hlt_diEl/Bool_t");
-    // outTree.Branch("hlt_physics", &out_HLT_Physics, "hlt_physics/Bool_t");
-    // outTree.Branch("hlt_random", &out_HLT_Random, "hlt_random/Bool_t");
-    // outTree.Branch("hlt_photon", &out_HLT_Photon, "hlt_photon/Bool_t");
-    // outTree.Branch("hlt_mu", &out_HLT_Mu, "hlt_mu/Bool_t");
-    // outTree.Branch("hlt_met", &out_HLT_MET, "hlt_met/Bool_t");
-    // outTree.Branch("hlt_pfmet", &out_HLT_PFMET, "hlt_pfmet/Bool_t");
-    // outTree.Branch("hlt_ht", &out_HLT_HT, "hlt_ht/Bool_t");
 
     // MET filters
     bool out_passCSC(true);
@@ -194,7 +197,7 @@ int main(int argc, char* argv[]) {
     Long64_t nEntriesRef = refJetTree.getEntries();
     Long64_t nEntriesL1  = l1JetTree.getEntries();
     Long64_t nEntries(0);
-    if (nEntriesRef != nEntriesL1) {
+    if (nEntriesRef != nEntriesL1){
         throw std::range_error("Different number of events in L1 & ref trees");
     } else {
         nEntries = (opts.nEvents() > 0) ? opts.nEvents() : nEntriesL1;
@@ -215,6 +218,8 @@ int main(int argc, char* argv[]) {
     bool doCleaningCuts = opts.cleanJets() != "";
     if (doCleaningCuts) {
         cout << "Applying " << opts.cleanJets() << " jet cleaning cuts" << endl;
+    } else{
+        cout << "Not applying any cleaning cuts" << endl;
     }
 
     //////////////////////
@@ -223,24 +228,29 @@ int main(int argc, char* argv[]) {
     // produce matching pairs and store
     Long64_t drawCounter(0), matchedEvent(0), cscFail(0);
     Long64_t counter(0);
+    Long64_t interstingEvents(0);
     for (Long64_t iEntry = 0; counter < nEntries; ++iEntry, ++counter) {
 
-        if (counter % 10000 == 0) {
-            cout << "Entry: " << iEntry << " at " << getCurrentTime() << endl;
-        }
 
         // Make sure to add any other Trees here!
         if (refJetTree.getEntry(iEntry) < 1 ||
             l1JetTree.getEntry(iEntry) < 1 ||
             eventTree.getEntry(iEntry) < 1 ||
             metFilterTree.getEntry(iEntry) < 1 ||
+            towerTree.getEntry(iEntry) < 1 ||
             recoVtxTree.getEntry(iEntry) < 1)
             break;
 
         // event info
+        out_run = eventData->run;
         out_event = eventData->event;
         out_ls = (Long64_t) eventData->lumi;
         out_numPUVertices = recoVtxData->nVtx;
+
+        if (counter % 10000 == 0) {
+            cout << "Entry: " << iEntry << " at " << getCurrentTime();
+            cout << " (run " << out_run << " event " << out_event << ")" << endl;
+        }
 
         // MET filter info
         out_passCSC = metFilterData->cscTightHalo2015Filter;
@@ -280,17 +290,20 @@ int main(int argc, char* argv[]) {
             out_pt = it.l1Jet().Et();
             out_eta = it.l1Jet().Eta();
             out_phi = it.l1Jet().Phi();
+            // probably should rethink how to store TLorentzVec alongside original obj.
+            int l1Ind = findL1JetIndex(out_pt, out_eta, out_phi, *l1Data);
+            if (l1Ind < 0) throw std::range_error("No L1 Jet");
+            out_ieta = l1Data->jetIEta[l1Ind]; // eurgh GT coords
+            out_iphi = l1Data->jetIPhi[l1Ind];
+
             out_rsp = it.l1Jet().Et()/it.refJet().Et();
-            out_rsp_inv =  it.refJet().Et()/it.l1Jet().Et();
             out_dr = it.refJet().DeltaR(it.l1Jet());
-            out_deta = it.refJet().Eta() - it.l1Jet().Eta();
-            out_dphi = it.refJet().DeltaPhi(it.l1Jet());
+            out_deta = it.l1Jet().Eta() - it.refJet().Eta();
+            out_dphi = it.l1Jet().DeltaPhi(it.refJet());
             out_ptRef = it.refJet().Pt();
             out_etaRef = it.refJet().Eta();
             out_phiRef = it.refJet().Phi();
             out_ptDiff = it.l1Jet().Et() - it.refJet().Et();
-            out_resL1 = out_ptDiff/it.l1Jet().Et();
-            out_resRef = out_ptDiff/it.refJet().Et();
 
             int rInd = findRecoJetIndex(out_ptRef, out_etaRef, out_phiRef, *refData);
             if (rInd < 0) throw std::range_error("No RecoJet");
@@ -308,6 +321,10 @@ int main(int argc, char* argv[]) {
             out_muMult = refData->muMult[rInd];
             out_hfhMult = refData->hfhMult[rInd];
             out_hfemMult = refData->hfemMult[rInd];
+
+            // hack on some cuts as to whether we should save for this matched pair
+            // we want to keep the final file size down
+            // if ( fabs(it.l1Jet().Eta())>3.00 ) // only look at forward jets
             outTree.Fill();
         }
 
@@ -334,6 +351,7 @@ int main(int argc, char* argv[]) {
     outTree.Write("", TObject::kOverwrite);
     outFile->Close();
     cout << matchedEvent << " events had 1+ matches, out of " << nEntries << endl;
-    cout << cscFail << " events failed CSC check, out of " << nEntries << endl;
+    cout << "Total interesting events: " << interstingEvents << endl;
+    if (doCleaningCuts) cout << cscFail << " events failed CSC check, out of " << nEntries << endl;
     return 0;
 }

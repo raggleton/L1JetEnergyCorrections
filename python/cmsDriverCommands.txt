@@ -1,0 +1,52 @@
+Should probably make a new CMSSW config file every time.
+This is a log of cmsDriver.py commands have been sucessfully used.
+
+
+HARDWARE OUTPUT 2016: works and includes forward jets in hw
+cmsDriver.py l1NtupleDataMaker2016 -s RAW2DIGI -n 100 --era=Run2_2016 --data --conditions=80X_dataRun2_v13 --no_output --no_exec --geometry=Extended2016,Extended2016Reco --customise=L1Trigger/Configuration/customiseReEmul.L1TEventSetupForHF1x1TPs --customise=L1Trigger/L1TNtuples/customiseL1Ntuple.L1NtupleRAW --filein=/store/data/Run2016B/ZeroBias/RAW/v2/000/273/158/00000/0AC840F0-7418-E611-98C5-02163E01399D.root
+
+
+EMULATOR (simulates the trigger primitives) OUTPUT 2016: works and does include forward jets
+cmsDriver.py l1NtupleDataMaker2016 -s RAW2DIGI -n 100 --era=Run2_2016 --data --conditions=80X_dataRun2_v13 --no_output --no_exec --geometry=Extended2016,Extended2016Reco --customise=L1Trigger/Configuration/customiseReEmul.L1TEventSetupForHF1x1TPs --customise=L1Trigger/Configuration/customiseReEmul.L1TReEmulFromRAWsimTP --customise=L1Trigger/L1TNtuples/customiseL1Ntuple.L1NtupleEMU --filein=/store/data/Run2016B/ZeroBias/RAW/v2/000/273/158/00000/0AC840F0-7418-E611-98C5-02163E01399D.root
+
+
+EMULATOR (uses the real trigger primitives) OUTPUT 2016: l1UpgradeTree seems to be empty...
+cmsDriver.py l1NtupleDataMaker2016 -s RAW2DIGI -n 100 --era=Run2_2016 --data --conditions=80X_dataRun2_v13 --no_output --no_exec --geometry=Extended2016,Extended2016Reco --customise=L1Trigger/Configuration/customiseReEmul.L1TEventSetupForHF1x1TPs --customise=L1Trigger/Configuration/customiseReEmul.L1TReEmulFromRAW --customise=L1Trigger/L1TNtuples/customiseL1Ntuple.L1NtupleEMU --filein=/store/data/Run2016B/ZeroBias/RAW/v2/000/273/158/00000/0AC840F0-7418-E611-98C5-02163E01399D.root
+
+
+HARDWARE & EMULATOR OUTPUT 2016
+
+
+
+
+
+
+
+MONTE-CARLO 2015 (when the MC is from)
+(no JEC meddling...changed the config files in question by hand)
+
+JUST RAW, emulator and genjet output only (required me to comment out the '+l1uGTTree' in L1Trigger/L1TNtuples/python/L1NtupleRAW_cff.py)
+cmsDriver.py l1NtupleMcMaker2016 -s RAW2DIGI -n 100 --era=Run2_2016 --mc --conditions=auto:run2_mc --no_output --no_exec --customise=L1Trigger/Configuration/customiseReEmul.L1TReEmulMCFromRAW2015 --customise=L1Trigger/L1TNtuples/customiseL1Ntuple.L1NtupleRAWEMUGEN_MC --geometry=Extended2016,Extended2016Reco --filein=/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/38297423-11AA-E511-935B-00304865C45A.root
+
+
+ALSO WITH RECO (required me to comment out the '+l1TauRecoTree' in L1Trigger/L1TNtuples/python/L1NtupleAOD_cff.py) 
+cmsDriver.py l1NtupleMcMaker2016 -s RAW2DIGI -n 100 --era=Run2_2016 --mc --conditions=auto:run2_mc --no_output --no_exec  --customise=L1Trigger/Configuration/customiseReEmul.L1TReEmulMCFromRAW2015 --customise=L1Trigger/L1TNtuples/customiseL1Ntuple.L1NtupleAODEMUGEN_MC --geometry=Extended2016,Extended2016Reco --filein=/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/AODSIM/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20000/02EE186A-5AAA-E511-800E-0CC47A6C1054.root --secondfilein=/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/38297423-11AA-E511-935B-00304865C45A.root,/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/667E1C99-15AA-E511-8DA1-0CC47A13D418.root,/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/A019C82F-21AA-E511-8448-0025904897C2.root,/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/C45E74DA-1FAA-E511-93F4-0CC47A6C0682.root,/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/C668D722-18AA-E511-9689-0CC47A13D09C.root,/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/EA0B90EC-23AA-E511-9555-002590491B1E.root
+...sometimes seg faults...
+
+
+
+***QCD***
+CHILD
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/AODSIM/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20000/02EE186A-5AAA-E511-800E-0CC47A6C1054.root
+
+PARENTS
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/38297423-11AA-E511-935B-00304865C45A.root
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/667E1C99-15AA-E511-8DA1-0CC47A13D418.root
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/A019C82F-21AA-E511-8448-0025904897C2.root
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/C45E74DA-1FAA-E511-93F4-0CC47A6C0682.root
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/C668D722-18AA-E511-9689-0CC47A13D09C.root
+/store/mc/RunIIFall15DR76/QCD_Pt-15to3000_TuneCUETP8M1_Flat_13TeV_pythia8/GEN-SIM-RAW/25nsFlat0to50NzshcalRaw_76X_mcRun2_asymptotic_v12-v1/20001/EA0B90EC-23AA-E511-9555-002590491B1E.root
+
+useful info
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideL1TStage2Instructions
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideL1TNtuples
