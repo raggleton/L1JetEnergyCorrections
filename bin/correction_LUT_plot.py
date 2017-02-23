@@ -20,7 +20,7 @@ import os
 import argparse
 import binning
 import common_utils as cu
-from runCalibration import generate_eta_graph_name, central_fit, set_fit_params
+from runCalibration import generate_eta_graph_name, set_fit_params
 from correction_LUT_GCT import print_GCT_lut_file
 from correction_LUT_stage1 import print_Stage1_lut_file
 from correction_LUT_stage2 import print_Stage2_lut_files, print_Stage2_func_file
@@ -137,46 +137,6 @@ def get_functions_params_textfile(text_filename):
             all_fits.append(fn)
 
         return all_fits, all_fit_params
-
-
-def print_function_code(function, lang="cpp"):
-    """Print TF1 to screen so can replicate in ROOT or numpy
-
-    Can choose language (py, cpp, numpy)
-    """
-
-    rangemin = ROOT.Double()  # eurghhhhh - fixes pass by reference
-    rangemax = ROOT.Double()
-    function.GetRange(rangemin, rangemax)
-    params = [function.GetParameter(i) for i in range(function.GetNumberFreeParameters())]
-    name = function.GetName().replace(".", "p")
-
-    print ""
-
-    if lang.lower() == "py" or lang.lower() == "cpp":
-        if lang.lower() == 'py':
-            print "import ROOT"
-            print '%s = ROOT.TF1("%s", "%s", %g, %g);' % (name, name, function.GetExpFormula(), rangemin, rangemax)
-        elif lang.lower() == 'cpp':
-            print 'TF1 %s("%s", "%s", %g, %g);' % (name, name, function.GetExpFormula(), rangemin, rangemax)
-        for i, param in enumerate(params):
-            print "%s.SetParameter(%d, %.8f)" % (name, i, param)
-    elif lang.lower() == "numpy":
-        print "import numpy as np"
-        print "import matplotlib.pyplot as plt"
-        print "et = np.arange(%g, %g, 0.1)" % (0, 250)
-        for i, param in enumerate(params):
-            print "p%d = %.8f" % (i, param)
-        print "def pf_func(et, p0, p1, p2, p3, p4, p5):"
-        print "    return p0 + (p1/(np.power(np.log10(et), 2)+p2)) + p3 * np.exp(-1.*p4*np.power(np.log10(et)-p5, 2))"
-        print ""
-        print ""
-        print "plt.plot(et, pf_func(et, p0, p1, p2, p3, p4, p5), lw=2, color='red')"
-        print "plt.xlabel(r'$E_T$');plt.ylabel('Correction Factor')"
-        print "plt.show()"
-        # print "plt.savefig('plot.pdf')"
-
-    print ""
 
 
 def plot_correction_map(corr_fn, filename="correction_map.pdf"):
@@ -663,15 +623,6 @@ def main(in_args=sys.argv[1:]):
                         action='store_true')
     parser.add_argument("--plots",
                         help="Make plots to check sensibility of correction functions.",
-                        action='store_true')
-    parser.add_argument("--cpp",
-                        help="print ROOT C++ code to screen",
-                        action='store_true')
-    parser.add_argument("--python",
-                        help="print PyROOT code to screen",
-                        action='store_true')
-    parser.add_argument("--numpy",
-                        help="print numpy code to screen",
                         action='store_true')
     parser.add_argument("--ptCompressionFile",
                         help="Human-readable pT compression LUT to use instead of deriving one  (Stage 2 only)",
