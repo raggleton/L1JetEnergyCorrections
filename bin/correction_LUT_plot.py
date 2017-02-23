@@ -466,23 +466,45 @@ def plot_all_functions(functions, filename, eta_bins, et_min=0, et_max=30):
 
 def main(in_args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=cu.CustomFormatter)
-    parser.add_argument("input", help="input ROOT/txt filename")
-    parser.add_argument("lut", help="output LUT filename", default="my_lut.txt")
-    parser.add_argument("--text", help="Read correction functions from text file instead of ROOT file",
+    parser.add_argument("input",
+                        help="input ROOT/txt filename")
+    parser.add_argument("lut",
+                        help="output LUT filename",
+                        default="my_lut.txt")
+    parser.add_argument("--text",
+                        help="Read correction functions from text file instead of ROOT file",
                         action='store_true')
-    parser.add_argument("--gct", help="Make LUT for GCT", action='store_true')
-    parser.add_argument("--stage1", help="Make LUT for Stage 1", action='store_true')
-    parser.add_argument("--stage2", help="Make LUT for Stage 2", action='store_true')
-    parser.add_argument("--stage2Func", help="Make function params file for Stage 2", action='store_true')
-    parser.add_argument("--fancy", help="Make fancy LUT. "
-                        "This checks for low pT deviations and caps the correction value",
+    parser.add_argument("--gct",
+                        help="Make LUT for GCT",
                         action='store_true')
-    parser.add_argument("--plots", help="Make plots to check sensibility of correction functions.",
+    parser.add_argument("--stage1",
+                        help="Make LUT for Stage 1",
                         action='store_true')
-    parser.add_argument("--cpp", help="print ROOT C++ code to screen", action='store_true')
-    parser.add_argument("--python", help="print PyROOT code to screen", action='store_true')
-    parser.add_argument("--numpy", help="print numpy code to screen", action='store_true')
-    parser.add_argument("--ptCompressionFile", help="txt file with pT compression LUT", default=None)
+    parser.add_argument("--stage2",
+                        help="Make LUT for Stage 2",
+                        action='store_true')
+    parser.add_argument("--stage2Func",
+                        help="Make function params file for Stage 2",
+                        action='store_true')
+    parser.add_argument("--fancy",
+                        help="This checks for low pT turnover and caps the correction "
+                        "value below that to a constant factor.",
+                        action='store_true')
+    parser.add_argument("--plots",
+                        help="Make plots to check sensibility of correction functions.",
+                        action='store_true')
+    parser.add_argument("--cpp",
+                        help="print ROOT C++ code to screen",
+                        action='store_true')
+    parser.add_argument("--python",
+                        help="print PyROOT code to screen",
+                        action='store_true')
+    parser.add_argument("--numpy",
+                        help="print numpy code to screen",
+                        action='store_true')
+    parser.add_argument("--ptCompressionFile",
+                        help="Human-readable pT compression LUT to use instead of deriving one  (Stage 2 only)",
+                        default=None)
     args = parser.parse_args(args=in_args)
 
     print args
