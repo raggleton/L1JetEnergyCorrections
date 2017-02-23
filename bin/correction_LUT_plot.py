@@ -486,7 +486,7 @@ def main(in_args=sys.argv[1:]):
     parser.add_argument("--stage2Func",
                         help="Make function params file for Stage 2",
                         action='store_true')
-    parser.add_argument("--fancy",
+    parser.add_argument("--lowPtCap",
                         help="This checks for low pT turnover and caps the correction "
                         "value below that to a constant factor.",
                         action='store_true')
@@ -546,7 +546,7 @@ def main(in_args=sys.argv[1:]):
         print_GCT_lut_file(all_fit_params, etaBins, args.lut)
 
     elif args.stage1:
-        fits = do_fancy_fits(all_fits, all_graphs, const_hf=False, condition=0.05, look_ahead=0) if args.fancy else all_fits
+        fits = do_fancy_fits(all_fits, all_graphs, const_hf=False, condition=0.05, look_ahead=0) if args.lowPtCap else all_fits
 
         if args.plots:
             # plot the fancy fits
@@ -557,7 +557,7 @@ def main(in_args=sys.argv[1:]):
 
     elif args.stage2 or args.stage2Func:
         # do fancy fits, can do constant values only for HF
-        fits = do_fancy_fits(all_fits, all_graphs, const_hf=True, condition=0.075, look_ahead=5, plot_dir=out_dir) if args.fancy else all_fits
+        fits = do_fancy_fits(all_fits, all_graphs, const_hf=True, condition=0.075, look_ahead=5, plot_dir=out_dir) if args.lowPtCap else all_fits
         if args.plots:
             # plot the fancy fits
             if not args.text:
