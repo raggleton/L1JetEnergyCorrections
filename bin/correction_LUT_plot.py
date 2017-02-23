@@ -23,7 +23,7 @@ import common_utils as cu
 from runCalibration import generate_eta_graph_name, central_fit, set_fit_params
 from correction_LUT_GCT import print_GCT_lut_file
 from correction_LUT_stage1 import print_Stage1_lut_file
-from correction_LUT_stage2 import print_Stage2_lut_files, print_Stage2_func_file, do_constant_fit
+from correction_LUT_stage2 import print_Stage2_lut_files, print_Stage2_func_file
 from multifunc import MultiFunc
 import csv
 from pprint import pprint
@@ -352,6 +352,122 @@ def do_constant_hf_fits(fits, graphs, plot_dir):
         else:
             new_functions.append(fit)
     return new_functions
+
+
+def do_constant_fit(graph, eta_min, eta_max, output_dir):
+    """Do constant-value fit to graph and plot the jackknife procedure.
+
+    We derive the constant fit value by jack-knifing. There are 2 forms here:
+    - "my jackknifing": where we loop over all possible subgraphs, and calculate
+    the mean for each.
+    - "proper jackknifing": where we loop over all N-1 subgraphs, and calulate
+    the mean for each.
+
+    Using these, we can then find the peak mean, or the average mean.
+    By default, we use the peak of "my jackknife" as it ignores the
+    high-correction tail better, and gives the better-sampled low pT
+    end more importance.
+
+    Parameters
+    ----------
+    graph : TGraph
+        Graph to fit
+    eta_min, eta_max : float
+        Eta bin boundaries, purely for the plots
+    output_dir : str
+        Output directory for plots.
+
+    Returns
+    -------
+    MultiFunc
+        MultiFunc object with a const-value function for the whole pT range.
+    """
+    print 'Doing constant-value fit'
+
+    xarr, yarr = cu.get_xy(graph)
+    xarr, yarr = np.array(xarr), np.array(yarr)  # use numpy array for easy slicing
+
+    # "my jackknifing": Loop over all possible subgraphs, and calculate a mean for each
+    end = len(yarr)
+    means = []
+    while end > 0:
+        start = 0
+        while start < end:
+            means.append(yarr[start:end].mean())
+            start += 1
+        end -= 1
+
+    # "proper" Jackknife means
+    jack_means = [np.delete(yarr, i).mean() for i in range(len(yarr))]
+
+    # Do plotting & peak finding, for both methods
+    plot_name = os.path.join(output_dir, 'means_hist_%g_%g_myjackknife.pdf' % (eta_min, eta_max))
+    peak, mean = find_peak_and_average_plot(means, eta_min, eta_max, plot_name, 'My jackknife')
+
+    plot_name = os.path.join(output_dir, 'means_hist_%g_%g_root_jackknife.pdf' % (eta_min, eta_max))
+    jackpeak, jackmean = find_peak_and_average_plot(jack_means, eta_min, eta_max, plot_name, 'Proper jackknife')
+
+    print 'my jackknife peak:', peak
+    print 'my jackknife mean:', mean
+    print 'jackknife peak:', jackpeak
+    print 'jackknfe mean:', jackmean
+    const_fn = ROOT.TF1("constant", '[0]', 0, 1024)
+    const_fn.SetParameter(0, peak)
+    const_multifn = MultiFunc({(0, np.inf): const_fn})
+    return const_multifn
+
+
+def find_peak_and_average_plot(values, eta_min, eta_max, plot_filename, title='Jackknife'):
+    """Plot histogram of values, and extract peak and average, using ROOT.
+
+    Parameters
+    ----------
+    means: list[float]
+        Collection of values
+    eta_min, eta_max: float
+        Eta bin edges
+    plot_filename: str
+        Output filepath for plot.
+    title : str
+        Title for plot
+
+    Returns
+    -------
+    float, float
+        Peak mean, and average mean.
+    """
+    values = np.array(values)
+    # auto-generate histogram x axis limits using min/max of values + spacer
+    num_bins = 75 if len(values) > 200 else 50
+    hist = ROOT.TH1D('h_mean', '', num_bins, 0.95 * values.min(), 1.05 * values.max())
+    for m in values:
+        hist.Fill(m)
+    # find peak
+    peak_bin = hist.GetMaximumBin()
+    peak = hist.GetBinCenter(peak_bin)
+    # plot
+    canv = ROOT.TCanvas('c', '', 600, 600)
+    canv.SetTicks(1, 1)
+    hist.Draw("HISTE")
+    average = values.mean()  # average of the values
+    title = '%s, %g < #eta^{L1} < %g, peak at %g, mean at %g;Subgraph mean correction' % (title, eta_min, eta_max, peak, average)
+    hist.SetTitle(title)
+    # Draw a marker for peak value
+    arrow_peak = ROOT.TArrow(peak, 25, peak, 0)
+    arrow_peak.SetLineWidth(2)
+    arrow_peak.SetLineColor(ROOT.kRed)
+    arrow_peak.Draw()
+    # Draw a marker for average value
+    arrow_mean = ROOT.TArrow(average, 5, average, 0)
+    arrow_mean.SetLineWidth(2)
+    arrow_mean.SetLineColor(ROOT.kBlue)
+    arrow_mean.Draw()
+    leg = ROOT.TLegend(0.75, 0.75, 0.88, 0.88)
+    leg.AddEntry(arrow_peak, "peak", "L")
+    leg.AddEntry(arrow_mean, "average", "L")
+    leg.Draw()
+    canv.SaveAs(plot_filename)
+    return peak, average
 
 
 def do_low_pt_cap_fits(fits, graphs, ignore_hf, condition=0.1, look_ahead=4):
