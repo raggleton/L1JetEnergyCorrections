@@ -325,14 +325,63 @@ def plot_all_graph_functions(graphs, functions, filename):
     c.SaveAs(filename)
 
 
-def do_fancy_fits(fits, graphs, const_hf, condition=0.1, look_ahead=4, plot_dir=None):
-    """Do fancy plateau/constant fits for graphs. """
+def do_constant_hf_fits(fits, graphs, plot_dir):
+    """Do constant correction factor fits for HF bins.
+
+    Also makes plots to check procedure.
+
+    Parameters
+    ----------
+    fits : list[TF1]
+        List of fit functions, one per eta bin.
+    graphs : list[TGraph]
+        List of graphs, one per eta bin.
+    plot_dir : str
+        Directory to put plots
+
+    Returns
+    -------
+    list[TF1]
+    """
     new_functions = []
     for i, (fit, gr) in enumerate(zip(fits, graphs)):
         print "Eta bin", str(i)
-        if (i >= len(binning.eta_bins_central) - 1) and const_hf:
+        if (i >= len(binning.eta_bins_central) - 1):
             new_fn = do_constant_fit(gr, binning.eta_bins[i], binning.eta_bins[i+1], plot_dir)
             new_functions.append(new_fn)
+        else:
+            new_functions.append(fit)
+    return new_functions
+
+
+def do_low_pt_cap_fits(fits, graphs, ignore_hf, condition=0.1, look_ahead=4):
+    """Do low PT fits for graphs.
+
+    Parameters
+    ----------
+    fits : list[TF1]
+        List of fit functions, one per eta bin.
+    graphs : list[TGraph]
+        List of graphs, one per eta bin.
+    ignore_hf : bool
+        Do not apply to HF bins, returns original fit function instead
+    condition : float
+        Absolute difference between graph & curve to determine where curve
+        becomes a constant value.
+    look_ahead : int, optional
+        Number of lower points to also consider when calculating
+        where plateau should occur
+
+    Returns
+    -------
+    list[MultiFunc, TF1]
+        MultiFunc if capped rpocdure used, TF1 if not.
+    """
+    new_functions = []
+    for i, (fit, gr) in enumerate(zip(fits, graphs)):
+        print "Eta bin", str(i)
+        if (i >= len(binning.eta_bins_central) - 1) and ignore_hf:
+            new_functions.append(fit)
         else:
             new_fn = do_fancy_fit(fit, gr, condition, look_ahead)
             new_functions.append(new_fn)
@@ -340,8 +389,7 @@ def do_fancy_fits(fits, graphs, const_hf, condition=0.1, look_ahead=4, plot_dir=
 
 
 def do_fancy_fit(fit, graph, condition=0.1, look_ahead=4):
-    """
-    Make fancy fit, by checking for deviations between graph and fit at low pT.
+    """Make fancy fit, by checking for deviations between graph and fit at low pT.
     Then below the pT where they differ, just use the last good correction
     factor as a constant correction factor.
 
@@ -362,6 +410,10 @@ def do_fancy_fit(fit, graph, condition=0.1, look_ahead=4):
     look_ahead : int, optional
         Number of lower points to also consider when calculating
         where plateau should occur
+
+    Returns
+    -------
+    MultiFunc
 
     """
     print "Making fancy fit, using condition %f with look-ahead %d" % (condition, look_ahead)
@@ -490,6 +542,9 @@ def main(in_args=sys.argv[1:]):
                         help="This checks for low pT turnover and caps the correction "
                         "value below that to a constant factor.",
                         action='store_true')
+    parser.add_argument("--constantHF",
+                        help="This calculates a constant correciton factor for HF bins.",
+                        action='store_true')
     parser.add_argument("--plots",
                         help="Make plots to check sensibility of correction functions.",
                         action='store_true')
@@ -546,7 +601,7 @@ def main(in_args=sys.argv[1:]):
         print_GCT_lut_file(all_fit_params, etaBins, args.lut)
 
     elif args.stage1:
-        fits = do_fancy_fits(all_fits, all_graphs, const_hf=False, condition=0.05, look_ahead=0) if args.lowPtCap else all_fits
+        fits = do_low_pt_cap_fits(all_fits, all_graphs, ignore_hf=False, condition=0.05, look_ahead=0) if args.lowPtCap else all_fits
 
         if args.plots:
             # plot the fancy fits
@@ -556,8 +611,12 @@ def main(in_args=sys.argv[1:]):
         print_Stage1_lut_file(fits, args.lut, args.plots)
 
     elif args.stage2 or args.stage2Func:
-        # do fancy fits, can do constant values only for HF
-        fits = do_fancy_fits(all_fits, all_graphs, const_hf=True, condition=0.075, look_ahead=5, plot_dir=out_dir) if args.lowPtCap else all_fits
+        # do fancy fits: low Pt cap, and/or constant HF
+        fits = all_fits
+        if args.lowPtCap:
+            fits = do_low_pt_cap_fits(fits, all_graphs, ignore_hf=True, condition=0.075, look_ahead=5)
+        if args.constantHF:
+            fits = do_constant_hf_fits(fits, all_graphs, plot_dir=out_dir)
         if args.plots:
             # plot the fancy fits
             if not args.text:
