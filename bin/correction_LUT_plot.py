@@ -470,8 +470,8 @@ def find_peak_and_average_plot(values, eta_min, eta_max, plot_filename, title='J
     return peak, average
 
 
-def do_low_pt_cap_fits(fits, graphs, ignore_hf, condition=0.1, look_ahead=4):
-    """Do low PT fits for graphs.
+def do_low_pt_plateau_fits(fits, graphs, ignore_hf, condition=0.1, look_ahead=4):
+    """Do low PT plateau fits for graphs.
 
     Parameters
     ----------
@@ -499,13 +499,13 @@ def do_low_pt_cap_fits(fits, graphs, ignore_hf, condition=0.1, look_ahead=4):
         if (i >= len(binning.eta_bins_central) - 1) and ignore_hf:
             new_functions.append(fit)
         else:
-            new_fn = do_fancy_fit(fit, gr, condition, look_ahead)
+            new_fn = do_low_pt_plateau_fit(fit, gr, condition, look_ahead)
             new_functions.append(new_fn)
     return new_functions
 
 
-def do_fancy_fit(fit, graph, condition=0.1, look_ahead=4):
-    """Make fancy fit, by checking for deviations between graph and fit at low pT.
+def do_low_pt_plateau_fit(fit, graph, condition=0.1, look_ahead=4):
+    """Make low pt plateau fit, by checking for deviations between graph and fit at low pT.
     Then below the pT where they differ, just use the last good correction
     factor as a constant correction factor.
 
@@ -654,7 +654,7 @@ def main(in_args=sys.argv[1:]):
     parser.add_argument("--stage2Func",
                         help="Make function params file for Stage 2",
                         action='store_true')
-    parser.add_argument("--lowPtCap",
+    parser.add_argument("--lowPtPlateau",
                         help="This checks for low pT turnover and caps the correction "
                         "value below that to a constant factor.",
                         action='store_true')
@@ -717,7 +717,7 @@ def main(in_args=sys.argv[1:]):
         print_GCT_lut_file(all_fit_params, etaBins, args.lut)
 
     elif args.stage1:
-        fits = do_low_pt_cap_fits(all_fits, all_graphs, ignore_hf=False, condition=0.05, look_ahead=0) if args.lowPtCap else all_fits
+        fits = do_low_pt_plateau_fits(all_fits, all_graphs, ignore_hf=False, condition=0.05, look_ahead=0) if args.lowPtPlateau else all_fits
 
         if args.plots:
             # plot the fancy fits
@@ -729,8 +729,8 @@ def main(in_args=sys.argv[1:]):
     elif args.stage2 or args.stage2Func:
         # do fancy fits: low Pt cap, and/or constant HF
         fits = all_fits
-        if args.lowPtCap:
-            fits = do_low_pt_cap_fits(fits, all_graphs, ignore_hf=True, condition=0.075, look_ahead=5)
+        if args.lowPtPlateau:
+            fits = do_low_pt_plateau_fits(fits, all_graphs, ignore_hf=True, condition=0.075, look_ahead=5)
         if args.constantHF:
             fits = do_constant_hf_fits(fits, all_graphs, plot_dir=out_dir)
         if args.plots:

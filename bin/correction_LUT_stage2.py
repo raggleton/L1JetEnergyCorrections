@@ -743,8 +743,8 @@ def write_stage2_addend_multiplicative_lut(lut_filename, mapping_info, num_add_b
             lut.write('%d 0 # dummy\n' % i)
 
 
-def write_stage2_correction_lut(lut_filename, mapping_info):
-    """Write LUT that converts compressed address to correction factor.
+def write_stage2_multiplier_lut(lut_filename, mapping_info):
+    """Write LUT that converts compressed address to multiplier factor.
 
     Parameters
     ----------
@@ -945,7 +945,7 @@ def assign_pt_index(pt_values):
 
 def print_Stage2_lut_files(fit_functions,
                            eta_lut_filename, pt_lut_filename,
-                           corr_lut_filename, add_lut_filename, add_mult_lut_filename,
+                           mult_lut_filename, add_lut_filename, add_mult_lut_filename,
                            right_shift, num_corr_bits, num_add_bits,
                            plot_dir,
                            read_pt_compression=None,
@@ -971,7 +971,7 @@ def print_Stage2_lut_files(fit_functions,
     pt_lut_filename: str
         Filename for output LUT that converts pt to compressed index
 
-    corr_lut_filename: str
+    mult_lut_filename: str
         Filename for output LUT that converts address to multiplicative factor
 
     add_lut_filename: str
@@ -1002,9 +1002,9 @@ def print_Stage2_lut_files(fit_functions,
         then target_num_pt_bins = 2**N - 1
 
     merge_criterion: float
-        Criterion factor for compressing multiple pt bins into one bin. Bins will
+        Criterion factor for compressing multiple pt values into one bin. Values will
         be combined if the maximum correction factor = merge_criterion * minimum
-        correction factor for those pt bins.
+        correction factor for those pt values.
 
     merge_algorithm : str {'greedy' , 'kmeans'}
         Merge algorithm to use to decide upon compressed ET binning.
@@ -1130,7 +1130,7 @@ def print_Stage2_lut_files(fit_functions,
         plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir)
 
     # put them into a LUT
-    write_stage2_correction_lut(corr_lut_filename, all_mapping_info)
+    write_stage2_multiplier_lut(mult_lut_filename, all_mapping_info)
     write_stage2_addition_lut(add_lut_filename, all_mapping_info)
     write_stage2_addend_multiplicative_lut(add_mult_lut_filename, all_mapping_info, num_add_bits, num_corr_bits)
 
