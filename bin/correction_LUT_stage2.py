@@ -31,6 +31,8 @@ from textwrap import wrap
 USE_MPL = True
 try:
     import matplotlib as mpl
+    # Hack for CMSSW 9 as it complains about Tkinter
+    mpl.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib.colors import ListedColormap
     from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, inset_axes, mark_inset
@@ -1123,11 +1125,15 @@ def print_Stage2_lut_files(fit_functions,
         title = 'eta bin %d, target # bins %d, ' \
                 'merge criterion %.3f, %s merge algo' % (eta_ind,
                     target_num_pt_bins, merge_criterion, merge_algorithm)
-        plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir)
-        plot_corr_vs_pt(map_info, eta_ind, title, plot_dir)
-        plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir)
-        plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir)
-        plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir)
+        if USE_MPL:
+            plot_pt_pre_post_mapping(map_info, eta_ind, title, plot_dir)
+            plot_corr_vs_pt(map_info, eta_ind, title, plot_dir)
+            plot_corr_vs_pt_clusters(map_info, eta_ind, title, plot_dir)
+            plot_pt_pre_pt_post_clusters(map_info, eta_ind, title, plot_dir)
+            plot_func_vs_lut_pt(map_info, eta_ind, title, plot_dir)
+        else:
+            print "Can't use matplotlib to make sanity plots"
+            print "Install it, or rewrite the plotting funcs in PyROOT"
 
     # put them into a LUT
     write_stage2_multiplier_lut(mult_lut_filename, all_mapping_info)
